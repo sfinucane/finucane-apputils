@@ -125,11 +125,25 @@ class Application(object):
         else:
             return print(*args, file=self.stdout, **kwargs)
 
-    def add_option(self):
+    def add_argument(self, name, help_='', type_=str, nargs=1):
+        safe_name = "".join(name.split())
         self._arg_parser.add_argument(
-            '--netlog-port', dest='netlog_port', action='store',
-            default=logging.handlers.DEFAULT_TCP_LOGGING_PORT, type=int,
-            help='port number of the socket logging handler to which log events will be sent')
+            safe_name, metavar=safe_name.upper(), type=type_, nargs=nargs,
+            help=help_)
+
+    def add_option(self, name, default=None, help_='',  type_=str, dest=None):
+        if default is None:
+            default = type_()
+
+        safe_name = "".join(name.split())
+        if dest is None:
+            dest = safe_name
+
+        optname = safe_name.lower().replace('_', '-')
+        self._arg_parser.add_argument(
+            '--{n}'.format(n=optname), dest=dest, action='append',
+            default=[default], type=type_,
+            help=help_)
 
     def _initialize(self):
         pass
