@@ -102,13 +102,15 @@ class Application(object):
 
         self.state = DictAttrAccessor(dict_=defaultdict(type(None)))
 
-        # arguments
+        # argument parser
         self._arg_parser = BasicArgumentParser(default_config_file=default_config_file,
                                                prog=name,
                                                description=description,
                                                epilog=epilog,
                                                formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                                fromfile_prefix_chars='@')
+        self._arg_parser.add_argument(
+            '--version', action='version', version='%(prog)s {vers}'.format(vers=self.version))
 
     @property
     def id_(self):
