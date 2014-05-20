@@ -13,8 +13,21 @@ DEFAULT_CONFIG_FILE = 'app.ini'
 
 
 class MyApp(Application):
+    def _initialize(self):
+        self.state.username = 'John Doe'
+
     def _main(self, message=''):
-        self.print(message)
+        self.print('{usr}: {m}'.format(usr=self.state.username, m=message))
+        self.print(self.state.nonexistant)
+
+    def _on_success(self):
+        pass
+
+    def _on_failure(self):
+        pass
+
+    def _finalize(self):
+        self.print('Goodbye {usr}!'.format(usr=self.state.username))
 
 
 if __name__ == '__main__':

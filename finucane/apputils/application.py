@@ -13,6 +13,8 @@ from io import StringIO
 from xml.sax import saxutils
 from collections import defaultdict
 
+from .dictattraccessor import DictAttrAccessor
+
 
 class ApplicationConfig(configparser.ConfigParser):
     """
@@ -96,7 +98,7 @@ class Application(object):
         self.config = None
         self.log = None
 
-        self.state = defaultdict(type(None))
+        self.state = DictAttrAccessor(dict_=defaultdict(type(None)))
 
         # arguments
         self._arg_parser = BasicArgumentParser(default_config_file=default_config_file,
