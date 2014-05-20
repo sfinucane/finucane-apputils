@@ -84,13 +84,15 @@ class Application(object):
     """
     """
     def __init__(self, name='', version='0.1.0', description='', epilog='', default_config_file=None,
-                 stdout=sys.stdout, stderr=sys.stderr):
+                 stdout=sys.stdout, stderr=sys.stderr, credits=None, organization=''):
         object.__init__(self)
         self.name = name
         self.version = version
         self.full_name = '{n}, version {v}'.format(n=name, v=version)
         self.description = description
         self.epilog = epilog
+        self.organization = organization
+        self.credits = credits
         self.stdout = stdout
         self.stderr = stderr
 
@@ -108,11 +110,24 @@ class Application(object):
                                                formatter_class=argparse.ArgumentDefaultsHelpFormatter,
                                                fromfile_prefix_chars='@')
 
+    @property
+    def id_(self):
+        organization = self.organization.lower().strip().replace('.', '-').replace(' ', '_')
+        name = self.name.lower().strip().replace('.', '-').replace(' ', '_')
+        version = self.version.lower().strip().replace('.', '-').replace(' ', '_')
+        return '{org}.{name}.{vers}'.format(org=organization, name=name, vers=version)
+
     def print(self, *args, **kwargs):
         if 'file' in kwargs:
             return print(*args, **kwargs)
         else:
             return print(*args, file=self.stdout, **kwargs)
+
+    def add_option(self):
+        self._arg_parser.add_argument(
+            '--netlog-port', dest='netlog_port', action='store',
+            default=logging.handlers.DEFAULT_TCP_LOGGING_PORT, type=int,
+            help='port number of the socket logging handler to which log events will be sent')
 
     def _initialize(self):
         pass

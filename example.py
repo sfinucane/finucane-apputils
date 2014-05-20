@@ -38,4 +38,5 @@ if __name__ == '__main__':
                 stdout=sys.stdout,
                 stderr=sys.stderr)
 
+    print(app.id_)
     app.run(message='Hello World!')
