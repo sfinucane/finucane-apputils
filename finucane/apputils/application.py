@@ -13,13 +13,6 @@ from io import StringIO
 from xml.sax import saxutils
 from collections import defaultdict
 
-__version__ = '0.1.0'
-
-PROGRAM_DESCRIPTION = ''
-PROGRAM_EPILOG = ''
-
-DEFAULT_CONFIG_FILE = 'app.ini'
-
 
 class ApplicationConfig(configparser.ConfigParser):
     """
@@ -55,15 +48,17 @@ class BasicArgumentParser(argparse.ArgumentParser):
                               default=default_config_file, type=ApplicationConfig,
                               help='path to the configuration file.')
         self.add_argument('--netlog-host', dest='netlog_host', action='store',
-                              default=None, type=str,
-                              help='hostname of the socket logging handler to which log events will be sent (e.g., "localhost")')
+                          default=None, type=str,
+                          help='hostname of the socket server to which log events will be sent (e.g., "localhost")')
         self.add_argument('--netlog-port', dest='netlog_port', action='store',
-                              default=logging.handlers.DEFAULT_TCP_LOGGING_PORT, type=int,
-                              help='port number of the socket logging handler to which log events will be sent')
+                          default=logging.handlers.DEFAULT_TCP_LOGGING_PORT, type=int,
+                          help='port number of the socket logging handler to which log events will be sent')
 
+
+STD_LOG_FSPEC = '[pid: %(process)d | log: %(name)s | level: %(levelname)s | time: %(asctime)s]\n>>> %(message)s\n'
 
 def setup_logger(logger_name=None, outfile=sys.stdout,
-                 format_spec='[pid: %(process)d | log: %(name)s | level: %(levelname)s | time: %(asctime)s]\n>>> %(message)s\n',
+                 format_spec=STD_LOG_FSPEC,
                  log_level=logging.INFO,
                  netlog_host='localhost',
                  netlog_port=logging.handlers.DEFAULT_TCP_LOGGING_PORT):
@@ -97,21 +92,51 @@ class Application(object):
         self.stdout = stdout
         self.stderr = stderr
 
+        self.args = None
+        self.config = None
+        self.log = None
+
         self.state = defaultdict(type(None))
 
         # arguments
-        arg_parser = BasicArgumentParser(default_config_file=default_config_file,
-                                         prog=name,
-                                         description=description,
-                                         epilog=epilog,
-                                         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                         fromfile_prefix_chars='@')
-        self.args = arg_parser.parse_args()
-        del arg_parser
+        self._arg_parser = BasicArgumentParser(default_config_file=default_config_file,
+                                               prog=name,
+                                               description=description,
+                                               epilog=epilog,
+                                               formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+                                               fromfile_prefix_chars='@')
 
-        # configuration
+    def print(self, *args, **kwargs):
+        if 'file' in kwargs:
+            return print(*args, **kwargs)
+        else:
+            return print(*args, file=self.stdout, **kwargs)
+
+    def _initialize(self):
+        pass
+
+    def _main(self, *args, **kwargs):
+        pass
+
+    def _on_success(self):
+        pass
+
+    def _on_failure(self):
+        pass
+
+    def _finalize(self):
+        pass
+
+    def exec_(self, *args, **kwargs):
+        self.run(*args, **kwargs)
+
+    def run(self, args=sys.argv[1:], **kwargs):
+        self.app_debug_id = '{c}.{f}'.format(c=str(self.__class__).strip().split("'")[1],
+                                             f=inspect.currentframe().f_code.co_name)
+
+        # initialize the application based on given arguments.
+        self.args = self._arg_parser.parse_args(args)
         self.config = self.args.config if hasattr(self.args, 'config') else None
-
         assert hasattr(self.args, 'verbose')
         # logger
         logging_level = logging.FATAL
@@ -129,37 +154,13 @@ class Application(object):
         self.log = setup_logger(logger_name=self.name, outfile=self.stderr, log_level=logging_level,
                                 netlog_host=self.args.netlog_host, netlog_port=self.args.netlog_port)
 
-    def print(self, *args, **kwargs):
-        if 'file' in kwargs:
-            return print(*args, **kwargs)
-        else:
-            return print(*args, file=self.stdout, **kwargs)
-
-    def _initialize(self):
-        pass
-
-    def _main(self):
-        pass
-
-    def _on_success(self):
-        pass
-
-    def _on_failure(self):
-        pass
-
-    def _finalize(self):
-        pass
-
-    def exec_(self):
         assert self.log is not None
         assert hasattr(self.log, 'critical')
         assert hasattr(self.log, 'debug')
         assert hasattr(self.log, 'info')
 
-        self.debug_app_id = '{c}.{f}'.format(c=str(self.__class__).strip().split("'")[1],
-                                             f=inspect.currentframe().f_code.co_name)
-
-        self.log.debug('Entering {app_id}'.format(app_id=self.debug_app_id))
+        # ready to roll!
+        self.log.debug('Entering {app_id}'.format(app_id=self.app_debug_id))
         try:
             assert self.config is not None
             assert self.args is not None
@@ -171,7 +172,7 @@ class Application(object):
             self.log.info('Executing initialization hook.')
             self._initialize()
             self.log.info('Executing primary function.')
-            self._main()
+            self._main(**kwargs)
             self.log.info('Primary function exited cleanly. Executing success hook.')
             self._on_success()
 
@@ -185,14 +186,4 @@ class Application(object):
         finally:
             self.log.info('Executing finalization hook.')
             self._finalize()
-            self.log.debug('Exiting {app_id}'.format(app_id=self.debug_app_id))
-
-
-if __name__ == '__main__':
-    app = Application(name=sys.argv[0],
-                      description=PROGRAM_DESCRIPTION,
-                      epilog=PROGRAM_EPILOG,
-                      default_config_file=DEFAULT_CONFIG_FILE,
-                      stdout=sys.stdout,
-                      stderr=sys.stderr)
-    app.exec_()
+            self.log.debug('Exiting {app_id}'.format(app_id=self.app_debug_id))
