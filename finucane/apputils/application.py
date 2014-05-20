@@ -184,7 +184,7 @@ class Application(object):
         elif self.args.verbose > 3:
             logging_level = logging.DEBUG
 
-        self.log = setup_logger(logger_name=self.name, outfile=self.stderr, log_level=logging_level,
+        self.log = setup_logger(logger_name=self.id_, outfile=self.stderr, log_level=logging_level,
                                 netlog_host=self.args.netlog_host, netlog_port=self.args.netlog_port)
 
         assert self.log is not None
