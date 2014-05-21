@@ -57,34 +57,33 @@ class BasicArgumentParser(argparse.ArgumentParser):
                           help='port number of the socket logging handler to which log events will be sent')
 
 
-STD_LOG_FSPEC = '[pid: %(process)d | log: %(name)s | level: %(levelname)s | time: %(asctime)s]\n>>> %(message)s\n'
+class LogAboveErrorFilter(logging.Filter):
+    """
+    """
+    def __init__(self):
+        logging.Filter.__init__(self)
 
-def setup_logger(logger_name=None, outfile=sys.stdout,
-                 format_spec=STD_LOG_FSPEC,
-                 log_level=logging.INFO,
-                 netlog_host='localhost',
-                 netlog_port=logging.handlers.DEFAULT_TCP_LOGGING_PORT):
-    log = logging.getLogger(logger_name)
-
-    log_handler = logging.StreamHandler(outfile)
-    log_formatter = logging.Formatter(format_spec)
-    log_handler.setFormatter(log_formatter)
-    log.addHandler(log_handler)
-
-    if netlog_host and netlog_port:
-        socket_handler = logging.handlers.SocketHandler(netlog_host, netlog_port)
-        log.addHandler(socket_handler)
-
-    log.setLevel(log_level)
-
-    return log
+    def filter(self, record):
+        # CRITICAL = 50
+        # ERROR = 40
+        # WARNING = 30
+        # INFO = 20
+        # DEBUG = 10
+        # NOTSET = 0
+        if record.levelno < logging.ERROR:
+            return 1
+        else:
+            return 0
 
 
 class Application(object):
     """
     """
+    STDLOG_FSPEC = '[pid: %(process)d | log: %(name)s | level: %(levelname)s | time: %(asctime)s]\n\t>>> %(message)s'
+    STDERR_FSPEC = STDLOG_FSPEC
+
     def __init__(self, name='', version='0.1.0', description='', epilog='', default_config_file=None,
-                 stdout=sys.stdout, stderr=sys.stderr, credits=None, organization=''):
+                 stdout=sys.stdout, stderr=sys.stderr, stdlog=sys.stderr, credits=None, organization=''):
         object.__init__(self)
         self.name = name
         self.version = version
@@ -95,6 +94,7 @@ class Application(object):
         self.credits = credits
         self.stdout = stdout
         self.stderr = stderr
+        self.stdlog = stdlog
 
         self.args = None
         self.config = None
@@ -171,26 +171,47 @@ class Application(object):
         self.args = self._arg_parser.parse_args(args)
         self.config = self.args.config if hasattr(self.args, 'config') else None
         assert hasattr(self.args, 'verbose')
-        # logger
-        logging_level = logging.FATAL
-        if self.args.verbose < 1:
-            logging_level = logging.CRITICAL
-        elif self.args.verbose == 1:
-            logging_level = logging.ERROR
-        elif self.args.verbose == 2:
-            logging_level = logging.WARNING
-        elif self.args.verbose == 3:
-            logging_level = logging.INFO
-        elif self.args.verbose > 3:
-            logging_level = logging.DEBUG
 
-        self.log = setup_logger(logger_name=self.id_, outfile=self.stderr, log_level=logging_level,
-                                netlog_host=self.args.netlog_host, netlog_port=self.args.netlog_port)
+        # logging facility
+        self.log = logging.getLogger(self.id_)
 
         assert self.log is not None
         assert hasattr(self.log, 'critical')
-        assert hasattr(self.log, 'debug')
+        assert hasattr(self.log, 'error')
+        assert hasattr(self.log, 'warning')
         assert hasattr(self.log, 'info')
+        assert hasattr(self.log, 'debug')
+
+        logging_level = logging.ERROR
+        if self.args.verbose == 1:
+            logging_level = logging.WARNING
+        elif self.args.verbose == 2:
+            logging_level = logging.INFO
+        elif self.args.verbose > 2:
+            logging_level = logging.DEBUG
+
+        self.log.setLevel(logging_level)
+
+        if self.stdlog is not None:
+            # events with a level above that of ERROR
+            self._stdlog_handler = logging.StreamHandler(self.stdlog)
+            stdlog_formatter = logging.Formatter(self.STDLOG_FSPEC)
+            self._stdlog_handler.setFormatter(stdlog_formatter)
+            self._stdlog_handler.addFilter(LogAboveErrorFilter())
+            self.log.addHandler(self._stdlog_handler)
+
+        if self.args.netlog_host and self.args.netlog_port:
+            # a network capable logging facility (remote possibilities, etc.)
+            self._netlog_handler = logging.handlers.SocketHandler(self.args.netlog_host, self.args.netlog_port)
+            self.log.addHandler(self._netlog_handler)
+
+        if self.stderr is not None:
+            # events with a level of ERROR and below
+            self._stderr_handler = logging.StreamHandler(self.stderr)
+            stderr_formatter = logging.Formatter(self.STDERR_FSPEC)
+            self._stderr_handler.setFormatter(stderr_formatter)
+            self._stderr_handler.setLevel(logging.ERROR)
+            self.log.addHandler(self._stderr_handler)
 
         # ready to roll!
         self.log.debug('Entering {app_id}'.format(app_id=self.app_debug_id))
@@ -207,7 +228,6 @@ class Application(object):
             self.log.info('Executing primary function.')
             self._main(**kwargs)
             self.log.info('Primary function exited cleanly. Executing success hook.')
-            self._on_success()
 
         except Exception as e:
             self.log.info('An exception occurred! Executing failure hook.')
@@ -216,7 +236,20 @@ class Application(object):
                 print(e, file=err_msg)
                 traceback.print_exc(file=err_msg)
                 self.log.critical(err_msg.getvalue())
+        else:
+            self._on_success()
         finally:
             self.log.info('Executing finalization hook.')
             self._finalize()
             self.log.debug('Exiting {app_id}'.format(app_id=self.app_debug_id))
+
+            # tear-down the logging facility
+            if hasattr(self, '_stdlog_handler') and self._stdlog_handler is not None:
+                self.log.removeHandler(self._stdlog_handler)
+
+            if hasattr(self, '_stderr_handler') and self._stderr_handler is not None:
+                self.log.removeHandler(self._stderr_handler)
+
+            if hasattr(self, '_netlog_handler') and self._netlog_handler is not None:
+                self.log.removeHandler(self._netlog_handler)
+
