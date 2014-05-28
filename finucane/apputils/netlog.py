@@ -3,6 +3,15 @@
 
 See ``http://docs.python.org/3.3/howto/logging-cookbook.html
 """
+# begin: Python 2.6 and newer support
+from __future__ import (absolute_import, division,
+                            print_function, unicode_literals)
+from future.builtins import (bytes, int, dict, range, str,
+                             ascii, chr, hex, input, next,
+                             oct, open, pow, round, super,
+                             filter, map, zip)
+# end: Python 2.6 and newer support
+
 import pickle
 import logging
 import logging.handlers

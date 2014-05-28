@@ -1,15 +1,53 @@
 #!/usr/bin/env python
 """
 """
+# Python 2.6 and newer support
+from __future__ import (absolute_import, division,
+                        print_function, unicode_literals)
+from future.builtins import (
+                bytes, dict, int, list, object, range, str,
+                ascii, chr, hex, input, next, oct, open,
+                pow, round, super,
+                filter, map, zip)
+try:
+    unicode()
+except NameError:
+    unicode = str
+
 import sys
+__python_version__ = {}
+try:
+    __python_version__['major'] = sys.version_info.major
+except AttributeError:
+    __python_version__['major'] = sys.version_info[0]
+try:
+    __python_version__['minor'] = sys.version_info.minor
+except AttributeError:
+    __python_version__['minor'] = sys.version_info[1]
+
 import time
-import argparse
-import configparser
+import argparse  # included in Python >2.7
+
+try:
+    import configparser  # Python 3.x
+except ImportError:
+    import ConfigParser as configparser  # Python 2.x
+
 import logging
 import logging.handlers
 import traceback
 import inspect
-from io import StringIO
+
+if __python_version__['major'] > 2:
+    from io import StringIO
+else:
+    from StringIO import StringIO as StringIO2x
+    class StringIO(StringIO2x):
+        def __enter__(self):
+            return self
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.close()
+
 from xml.sax import saxutils
 from collections import defaultdict
 
@@ -100,7 +138,7 @@ class Application(object):
         self.config = None
         self.log = None
 
-        self.state = DictAttrAccessor(dict_=defaultdict(type(None)))
+        self.state = DictAttrAccessor(dict_=defaultdict(lambda: None))  # dict with default type of None (2.x & 3.x)
 
         # argument parser
         self._arg_parser = BasicArgumentParser(default_config_file=default_config_file,
