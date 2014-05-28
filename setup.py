@@ -38,7 +38,7 @@ if (__python_version__['major'], __python_version__['minor']) in [(2, 6)]:
     required_packages += REQ_PKGS_PY26
 
 setup(name='finucane-apputils',
-      version='0.2.2',
+      version='0.3.0',
       description='Finucane Research application framework and utilities for Python',
       long_description=long_description,
       keywords='application framework utilities development finucane',
