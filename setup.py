@@ -15,7 +15,7 @@ except NameError:
     unicode = str
 
 import sys
-__python_version__ = {}
+__python_version__ = dict()
 try:
     __python_version__['major'] = sys.version_info.major
 except AttributeError:
@@ -43,7 +43,7 @@ with open('README.md') as file:
     long_description = file.read()
 
 setup(name='finucane-apputils',
-      version='0.1.0',
+      version='0.2.0',
       description='Finucane Research application framework and utilities for Python',
       long_description=long_description,
       keywords='application framework utilities development finucane',

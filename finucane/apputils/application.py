@@ -15,7 +15,7 @@ except NameError:
     unicode = str
 
 import sys
-__python_version__ = {}
+__python_version__ = dict()
 try:
     __python_version__['major'] = sys.version_info.major
 except AttributeError:
