@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 """
 """
+import sys
+__python_version__ = dict()
+try:
+    __python_version__['major'] = sys.version_info.major
+except AttributeError:
+    __python_version__['major'] = sys.version_info[0]
+try:
+    __python_version__['minor'] = sys.version_info.minor
+except AttributeError:
+    __python_version__['minor'] = sys.version_info[1]
+
 from distutils.core import setup
 from pkgutil import walk_packages
 
@@ -18,8 +29,16 @@ def find_packages(root_path, prefix=""):
 with open('README.md') as file:
     long_description = file.read()
 
+
+REQ_PKGS_ALL = ['future']
+REQ_PKGS_PY26 = ['argparse']
+
+required_packages = REQ_PKGS_ALL
+if (__python_version__['major'], __python_version__['minor']) in [(2, 6)]:
+    required_packages += REQ_PKGS_PY26
+
 setup(name='finucane-apputils',
-      version='0.2.1',
+      version='0.2.2',
       description='Finucane Research application framework and utilities for Python',
       long_description=long_description,
       keywords='application framework utilities development finucane',
@@ -41,9 +60,7 @@ setup(name='finucane-apputils',
                    'Topic :: Software Development :: Libraries',
                    'Topic :: Utilities'
                    ],
-      install_requires=['argparse',
-                        'future'
-                        ],
+      install_requires=required_packages,
       zip_safe=True,
       platforms='any',
       provides=['finucane.apputils'],
