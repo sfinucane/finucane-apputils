@@ -72,5 +72,5 @@ if __name__ == '__main__':
                    help_="the username to use. repeatable. in this case only the final name specified will be used")
 
     print('Running:', app.id_, 'with args:', sys.argv[1:])
-    app.run(message="It's very nice to meet you!")
-    app.run(message='Hello again!')
+    app.run(args=sys.argv[1:], message="It's very nice to meet you!")
+    app.run(args=sys.argv[1:], message='Hello again!')

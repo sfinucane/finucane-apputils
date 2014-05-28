@@ -60,7 +60,8 @@ class ApplicationConfig(configparser.ConfigParser):
     def __init__(self, file_path):
         configparser.ConfigParser.__init__(self)
         self._file_path = file_path
-        self.read(file_path)
+        if file_path is not None:
+            self.read(file_path)
 
     def as_dict(self):
         d = dict(self._sections)
@@ -83,7 +84,8 @@ class BasicArgumentParser(argparse.ArgumentParser):
         argparse.ArgumentParser.__init__(self, **kwargs)
         self.add_argument('-v', '--verbose', dest='verbose', action='count', default=0,
                           help='output additional information to stderr (more v\'s mean more output, 4 is maximal)')
-        if default_config_file:
+        # Only enable the config option is the default config is not set to None.
+        if default_config_file is not None:
             self.add_argument('--config', dest='config', action='store',
                               default=default_config_file, type=ApplicationConfig,
                               help='path to the configuration file.')
@@ -124,6 +126,12 @@ class Application(object):
                  stdout=sys.stdout, stderr=sys.stderr, stdlog=sys.stderr, credits=None, organization=''):
         object.__init__(self)
         self.name = name
+
+        self.app_debug_id = None
+        self._stdlog_handler = None
+        self._stderr_handler = None
+        self._netlog_handler = None
+
         self.version = version
         self.full_name = '{n}, version {v}'.format(n=name, v=version)
         self.description = description
@@ -201,13 +209,13 @@ class Application(object):
     def exec_(self, *args, **kwargs):
         self.run(*args, **kwargs)
 
-    def run(self, args=sys.argv[1:], **kwargs):
+    def run(self, args=[], **kwargs):
         self.app_debug_id = '{c}.{f}'.format(c=str(self.__class__).strip().split("'")[1],
                                              f=inspect.currentframe().f_code.co_name)
 
         # initialize the application based on given arguments.
         self.args = self._arg_parser.parse_args(args)
-        self.config = self.args.config if hasattr(self.args, 'config') else None
+        self.config = self.args.config if hasattr(self.args, 'config') else ApplicationConfig(file_path=None)
         assert hasattr(self.args, 'verbose')
 
         # logging facility
