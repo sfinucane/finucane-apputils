@@ -46,6 +46,8 @@ class MyApp(Application):
     def _main(self, message=''):
         self.print('{usr}: {m}'.format(usr=self.args.username[-1], m=self.args.intro[-1]))
         self.print('{usr}: {m}'.format(usr=self.args.username[-1], m=message))
+        self.print('{usr}: You are awesome, {a} times over!'.format(usr=self.args.username[-1],
+                                                                    a=self.args.awesomeness_level))
         self.print(self.state.nonexistant)
 
     def _on_success(self):
@@ -70,7 +72,7 @@ if __name__ == '__main__':
     app.add_argument('intro', help_='the message to give to the user (e.g., "Welcome aboard!")')
     app.add_option('username', unix_flag='u', default='John Doe',
                    help_="the username to use. repeatable. in this case only the final name specified will be used")
-    app.add_counted_option('awesomeness', unix_flag='a',
+    app.add_counted_option('awesomeness level', unix_flag='a',
                            help_='Adds awesomeness (the more, the greater the awesome level).')
 
 
