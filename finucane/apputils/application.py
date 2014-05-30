@@ -185,6 +185,17 @@ class Application(object):
             safe_name, metavar=safe_name.upper(), type=type_, nargs=nargs,
             help=help_)
 
+    def add_restricted_argument(self, name, choices, help_='', type_=str, nargs=1):
+        safe_name = _make_safe_name(name)
+
+        augmented_help = '{orig} (choices: {c})'.format(orig=help_,
+                                                        c=str(choices).strip().replace('[', '').replace(']', ''))
+
+        self._arg_parser.add_argument(
+            safe_name, metavar=safe_name.upper(), type=type_, nargs=nargs,
+            choices=choices,
+            help=augmented_help)
+
     def add_option(self, name, unix_flag=None, default=None, help_='',  type_=str, dest=None):
         if default is None:
             default = type_()
@@ -206,7 +217,7 @@ class Application(object):
                 default=[default], type=type_,
                 help=help_)
 
-    def add_restricted_option(self, name, choices, unix_flag=None, default=None, help_='', dest=None):
+    def add_restricted_option(self, name, choices, unix_flag=None, default=None, help_='', type_=str, dest=None):
         if default is None:
             default = choices[0]
 
@@ -214,21 +225,20 @@ class Application(object):
         if dest is None:
             dest = safe_name
 
-        augmented_help = '{orig} (choices: {c})'.format(orig=help_,
-                                                        c=str(choices).strip().replace('[', '').replace(']', ''))
-
         optname = _make_option_name(safe_name)
         if unix_flag is not None:
             self._arg_parser.add_argument(
                 '-{f}'.format(f=unix_flag),
-                '--{n}'.format(n=optname), dest=dest, action='count',
-                default=default,
-                help=augmented_help)
+                '--{n}'.format(n=optname), dest=dest, action='append',
+                choices=choices,
+                default=default, type=type_,
+                help=help_)
         else:
             self._arg_parser.add_argument(
-                '--{n}'.format(n=optname), dest=dest, action='count',
-                default=default,
-                help=augmented_help)
+                '--{n}'.format(n=optname), dest=dest, action='append',
+                choices=choices,
+                default=default, type=type_,
+                help=help_)
 
     def add_counted_option(self, name, unix_flag=None, default=None, help_='', dest=None):
         if default is None:

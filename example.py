@@ -74,6 +74,7 @@ if __name__ == '__main__':
                 stderr=sys.stderr)
 
     app.add_argument('intro', help_='the message to give to the user (e.g., "Welcome aboard!")')
+    app.add_restricted_argument('free', choices=['speech', 'beer'], help_='choose wisely, but don\'t stall man')
     app.add_option('username', unix_flag='u', default='John Doe',
                    help_="the username to use. repeatable. in this case only the final name specified will be used")
     app.add_counted_option('awesomeness level', unix_flag='a',
