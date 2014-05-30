@@ -116,6 +116,14 @@ class LogAboveErrorFilter(logging.Filter):
             return 0
 
 
+def _make_safe_name(name):
+    return "_".join(name.split())
+
+
+def _make_option_name(name):
+    return name.lower().replace('_', '-')
+
+
 class Application(object):
     """
     """
@@ -172,7 +180,7 @@ class Application(object):
             return print(*args, file=self.stdout, **kwargs)
 
     def add_argument(self, name, help_='', type_=str, nargs=1):
-        safe_name = "".join(name.split())
+        safe_name = _make_safe_name(name)
         self._arg_parser.add_argument(
             safe_name, metavar=safe_name.upper(), type=type_, nargs=nargs,
             help=help_)
@@ -181,11 +189,11 @@ class Application(object):
         if default is None:
             default = type_()
 
-        safe_name = "".join(name.split())
+        safe_name = _make_safe_name(name)
         if dest is None:
             dest = safe_name
 
-        optname = safe_name.lower().replace('_', '-')
+        optname = _make_option_name(safe_name)
         if unix_flag is not None:
             self._arg_parser.add_argument(
                 '-{f}'.format(f=unix_flag),
@@ -202,11 +210,11 @@ class Application(object):
         if default is None:
             default = type_()
 
-        safe_name = "".join(name.split())
+        safe_name = _make_safe_name(name)
         if dest is None:
             dest = safe_name
 
-        optname = safe_name.lower().replace('_', '-')
+        optname = _make_option_name(safe_name)
         if unix_flag is not None:
             self.add_argument(
                 '-{f}'.format(f=unix_flag),
