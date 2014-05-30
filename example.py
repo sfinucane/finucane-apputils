@@ -47,7 +47,10 @@ class MyApp(Application):
         self.print('{usr}: {m}'.format(usr=self.args.username[-1], m=self.args.intro[-1]))
         self.print('{usr}: {m}'.format(usr=self.args.username[-1], m=message))
         self.print('{usr}: You are awesome, {a} times over!'.format(usr=self.args.username[-1],
-                                                                    a=self.args.awesomeness_level))
+                                                                    a=self.args.awesomeness_level[-1]))
+        if self.args.flavor:
+            self.print('{usr}: You chose the {f} flavor!'.format(usr=self.args.username[-1],
+                                                                 f=self.args.flavor[-1]))
         self.print(self.state.nonexistant)
 
     def _on_success(self):
@@ -74,6 +77,8 @@ if __name__ == '__main__':
                    help_="the username to use. repeatable. in this case only the final name specified will be used")
     app.add_counted_option('awesomeness level', unix_flag='a',
                            help_='Adds awesomeness (the more, the greater the awesome level).')
+    app.add_restricted_option('flavor', choices=['chocolate', 'vanilla', 'strawberry'], help_='your favorite flavor')
+    app.add_switch('show welcome', unix_flag='s')
 
 
     print('Running:', app.id_, 'with args:', sys.argv[1:])

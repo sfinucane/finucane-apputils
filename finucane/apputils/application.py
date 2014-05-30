@@ -206,6 +206,30 @@ class Application(object):
                 default=[default], type=type_,
                 help=help_)
 
+    def add_restricted_option(self, name, choices, unix_flag=None, default=None, help_='', dest=None):
+        if default is None:
+            default = choices[0]
+
+        safe_name = _make_safe_name(name)
+        if dest is None:
+            dest = safe_name
+
+        augmented_help = '{orig} (choices: {c})'.format(orig=help_,
+                                                        c=str(choices).strip().replace('[', '').replace(']', ''))
+
+        optname = _make_option_name(safe_name)
+        if unix_flag is not None:
+            self._arg_parser.add_argument(
+                '-{f}'.format(f=unix_flag),
+                '--{n}'.format(n=optname), dest=dest, action='count',
+                default=default,
+                help=augmented_help)
+        else:
+            self._arg_parser.add_argument(
+                '--{n}'.format(n=optname), dest=dest, action='count',
+                default=default,
+                help=augmented_help)
+
     def add_counted_option(self, name, unix_flag=None, default=None, help_='', dest=None):
         if default is None:
             default = 0
@@ -225,6 +249,26 @@ class Application(object):
             self._arg_parser.add_argument(
                 '--{n}'.format(n=optname), dest=dest, action='count',
                 default=default,
+                help=help_)
+
+    def add_switch(self, name, unix_flag=None, default=None, help_='', dest=None):
+        action = 'store_true'
+        if default:
+            action = 'store_false'
+
+        safe_name = _make_safe_name(name)
+        if dest is None:
+            dest = safe_name
+
+        optname = _make_option_name(safe_name)
+        if unix_flag is not None:
+            self._arg_parser.add_argument(
+                '-{f}'.format(f=unix_flag),
+                '--{n}'.format(n=optname), dest=dest, action=action,
+                help=help_)
+        else:
+            self._arg_parser.add_argument(
+                '--{n}'.format(n=optname), dest=dest, action=action,
                 help=help_)
 
     def _initialize(self):
@@ -294,6 +338,12 @@ class Application(object):
             self._stderr_handler.setFormatter(stderr_formatter)
             self._stderr_handler.setLevel(logging.ERROR)
             self.log.addHandler(self._stderr_handler)
+
+        self.log.debug('Preparing {app_id} environment.'.format(app_id=self.app_debug_id))
+        # all arguments in ``self.args`` must be a list! Make it so.
+        for key, value in vars(self.args).items():
+            if not isinstance(value, list):
+                setattr(self.args, key, [value])
 
         # ready to roll!
         self.log.debug('Entering {app_id}'.format(app_id=self.app_debug_id))
