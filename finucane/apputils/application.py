@@ -177,7 +177,7 @@ class Application(object):
             safe_name, metavar=safe_name.upper(), type=type_, nargs=nargs,
             help=help_)
 
-    def add_option(self, name, default=None, help_='',  type_=str, dest=None):
+    def add_option(self, name, unix_flag=None, default=None, help_='',  type_=str, dest=None):
         if default is None:
             default = type_()
 
@@ -186,10 +186,38 @@ class Application(object):
             dest = safe_name
 
         optname = safe_name.lower().replace('_', '-')
-        self._arg_parser.add_argument(
-            '--{n}'.format(n=optname), dest=dest, action='append',
-            default=[default], type=type_,
-            help=help_)
+        if unix_flag is not None:
+            self._arg_parser.add_argument(
+                '-{f}'.format(f=unix_flag),
+                '--{n}'.format(n=optname), dest=dest, action='append',
+                default=[default], type=type_,
+                help=help_)
+        else:
+            self._arg_parser.add_argument(
+                '--{n}'.format(n=optname), dest=dest, action='append',
+                default=[default], type=type_,
+                help=help_)
+
+    def add_counted_option(self, name, unix_flag=None, default=None, help_='', type_=int, dest=None):
+        if default is None:
+            default = type_()
+
+        safe_name = "".join(name.split())
+        if dest is None:
+            dest = safe_name
+
+        optname = safe_name.lower().replace('_', '-')
+        if unix_flag is not None:
+            self.add_argument(
+                '-{f}'.format(f=unix_flag),
+                '--{n}'.format(n=optname), dest=dest, action='count',
+                default=default, type=type_,
+                help=help_)
+        else:
+            self.add_argument(
+                '--{n}'.format(n=optname), dest=dest, action='count',
+                default=default, type=type_,
+                help=help_)
 
     def _initialize(self):
         pass
