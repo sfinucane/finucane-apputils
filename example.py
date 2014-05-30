@@ -31,7 +31,7 @@ from finucane.apputils import Application
 __version__ = '0.1.0'
 
 PROGRAM_DESCRIPTION = 'An example application which showcases the Finucane Research apputils framework.'
-PROGRAM_EPILOG = 'See http://www.github.com/sfinucane/finucane-apputils for more information.'
+PROGRAM_EPILOG = 'See http://www.github.com/sfinucane/finucane-apputils for more information.\nCopyright (c) 2014 Sean A. Finucane'
 ORGANIZATION = 'Finucane Research'
 
 DEFAULT_CONFIG_FILE = 'app.ini'
