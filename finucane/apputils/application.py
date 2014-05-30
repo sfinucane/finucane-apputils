@@ -206,9 +206,9 @@ class Application(object):
                 default=[default], type=type_,
                 help=help_)
 
-    def add_counted_option(self, name, unix_flag=None, default=None, help_='', type_=int, dest=None):
+    def add_counted_option(self, name, unix_flag=None, default=None, help_='', dest=None):
         if default is None:
-            default = type_()
+            default = 0
 
         safe_name = _make_safe_name(name)
         if dest is None:
@@ -219,12 +219,12 @@ class Application(object):
             self._arg_parser.add_argument(
                 '-{f}'.format(f=unix_flag),
                 '--{n}'.format(n=optname), dest=dest, action='count',
-                default=default, type=type_,
+                default=default,
                 help=help_)
         else:
             self._arg_parser.add_argument(
                 '--{n}'.format(n=optname), dest=dest, action='count',
-                default=default, type=type_,
+                default=default,
                 help=help_)
 
     def _initialize(self):
