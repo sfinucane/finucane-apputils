@@ -216,13 +216,13 @@ class Application(object):
 
         optname = _make_option_name(safe_name)
         if unix_flag is not None:
-            self.add_argument(
+            self._arg_parser.add_argument(
                 '-{f}'.format(f=unix_flag),
                 '--{n}'.format(n=optname), dest=dest, action='count',
                 default=default, type=type_,
                 help=help_)
         else:
-            self.add_argument(
+            self._arg_parser.add_argument(
                 '--{n}'.format(n=optname), dest=dest, action='count',
                 default=default, type=type_,
                 help=help_)
