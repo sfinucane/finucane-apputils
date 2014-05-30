@@ -68,8 +68,11 @@ if __name__ == '__main__':
                 stderr=sys.stderr)
 
     app.add_argument('intro', help_='the message to give to the user (e.g., "Welcome aboard!")')
-    app.add_option('username', default='John Doe',
+    app.add_option('username', unix_flag='u', default='John Doe',
                    help_="the username to use. repeatable. in this case only the final name specified will be used")
+    app.add_counted_option('awesomeness', unix_flag='a',
+                           help_='Adds awesomeness (the more, the greater the awesome level).')
+
 
     print('Running:', app.id_, 'with args:', sys.argv[1:])
     app.run(args=sys.argv[1:], message="It's very nice to meet you!")
