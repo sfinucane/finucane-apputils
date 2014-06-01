@@ -4,11 +4,7 @@
 # Python 2.6 and newer support
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-from future.builtins import (
-                bytes, dict, int, list, object, range, str,
-                ascii, chr, hex, input, next, oct, open,
-                pow, round, super,
-                filter, map, zip)
+
 try:
     unicode()
 except NameError:
@@ -25,7 +21,6 @@ try:
 except AttributeError:
     __python_version__['minor'] = sys.version_info[1]
 
-import time
 import argparse  # included in Python >2.7
 
 try:
@@ -48,7 +43,6 @@ else:
         def __exit__(self, exc_type, exc_val, exc_tb):
             self.close()
 
-from xml.sax import saxutils
 from collections import defaultdict
 
 from .dictattraccessor import DictAttrAccessor
