@@ -83,10 +83,10 @@ class BasicArgumentParser(argparse.ArgumentParser):
                               default=default_config_file, type=ApplicationConfig,
                               help='path to the configuration file.')
         self.add_argument('--netlog-host', dest='netlog_host', action='store',
-                          default=None, type=str,
+                          default=None, type=str, nargs='*',
                           help='hostname of the socket server to which log events will be sent (e.g., "localhost")')
         self.add_argument('--netlog-port', dest='netlog_port', action='store',
-                          default=logging.handlers.DEFAULT_TCP_LOGGING_PORT, type=int,
+                          default=logging.handlers.DEFAULT_TCP_LOGGING_PORT, type=int, nargs='*',
                           help='port number of the socket logging handler to which log events will be sent')
 
 
@@ -345,6 +345,7 @@ class Application(object):
             self._stdlog_handler.addFilter(LogAboveErrorFilter())
             self.log.addHandler(self._stdlog_handler)
 
+        self._netlog_handler = []
         for address in zip(self.args.netlog_host, self.args.netlog_port):
             if address[0] is not None and address[1] is not None:
                 # a network capable logging facility (remote possibilities, etc.)
@@ -405,4 +406,7 @@ class Application(object):
                         self.log.removeHandler(handler)
                 else:
                     self.log.removeHandler(self._netlog_handler)
+
+                self._netlog_handler = None
+
 
