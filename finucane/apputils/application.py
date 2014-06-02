@@ -43,6 +43,11 @@ else:
         def __exit__(self, exc_type, exc_val, exc_tb):
             self.close()
 
+if __python_version__['major'] > 2:
+    from urllib.parse import urlparse
+else:
+    from urlparse import urlparse
+
 #from .dictattraccessor import DictAttrAccessor
 from .namespace import Namespace, ImmutableNamespace
 
@@ -70,6 +75,15 @@ class ApplicationConfig(configparser.ConfigParser):
         return self.__str__()
 
 
+def NetloggerAddressParse(url, *args, **kwargs):
+    """
+    """
+    s_url = str(url)
+    if not s_url.startswith('//'):
+        s_url = "".join(["//", s_url])
+    return urlparse(s_url, *args, **kwargs)
+
+
 class BasicArgumentParser(argparse.ArgumentParser):
     """
     """
@@ -82,12 +96,9 @@ class BasicArgumentParser(argparse.ArgumentParser):
             self.add_argument('--config', dest='config', action='store',
                               default=default_config_file, type=ApplicationConfig,
                               help='path to the configuration file.')
-        self.add_argument('--netlog-host', dest='netlog_host', action='store',
-                          default=None, type=str, nargs='*',
-                          help='hostname of the socket server to which log events will be sent (e.g., "localhost")')
-        self.add_argument('--netlog-port', dest='netlog_port', action='store',
-                          default=logging.handlers.DEFAULT_TCP_LOGGING_PORT, type=int, nargs='*',
-                          help='port number of the socket logging handler to which log events will be sent')
+        self.add_argument('--netlogger', dest='netlogger_url', action='store',
+                          default=None, type=NetloggerAddressParse, nargs='*',
+                          help='URL(s) of the socket server(s) to which log events will be sent (e.g., "localhost:9020")')
 
 
 class LogAboveErrorFilter(logging.Filter):
@@ -346,10 +357,15 @@ class Application(object):
             self.log.addHandler(self._stdlog_handler)
 
         self._netlog_handler = []
-        for address in zip(self.args.netlog_host, self.args.netlog_port):
-            if address[0] is not None and address[1] is not None:
+        addresses = []
+        for url in self.args.netlogger_url:
+            if url is not None:
+                addresses.append({'host': url.hostname, 'port': url.port})
+
+        for address in addresses:
+            if address['host'] is not None and address['port'] is not None:
                 # a network capable logging facility (remote possibilities, etc.)
-                self._netlog_handler.append(logging.handlers.SocketHandler(*address))
+                self._netlog_handler.append(logging.handlers.SocketHandler(address['host'], address['port']))
                 self.log.addHandler(self._netlog_handler[-1])
 
         if self.stderr is not None:
