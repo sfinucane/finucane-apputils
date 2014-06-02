@@ -322,12 +322,14 @@ class Application(object):
         assert hasattr(self.log, 'info')
         assert hasattr(self.log, 'debug')
 
-        logging_level = logging.ERROR
+        logging_level = logging.CRITICAL
         if self.args.verbosity[-1] == 1:
-            logging_level = logging.WARNING
+            logging_level = logging.ERROR
         elif self.args.verbosity[-1] == 2:
+            logging_level = logging.WARNING
+        elif self.args.verbosity[-1] == 3:
             logging_level = logging.INFO
-        elif self.args.verbosity[-1] > 2:
+        elif self.args.verbosity[-1] > 3:
             logging_level = logging.DEBUG
 
         self.log.setLevel(logging_level)
