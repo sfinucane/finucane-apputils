@@ -1,11 +1,5 @@
 #!/usr/bin/env python
-"""namespace module
-
-ActiveState Recipe (original source)
-http://code.activestate.com/recipes/577887-a-simple-namespace-class/
-License: MIT
-
-WARNING & DISCLAIMER: Modifications made as needed for project purposes!
+"""namespace
 
 The MIT License (MIT)
 
@@ -82,7 +76,9 @@ class Namespace(object):
             default_factory = lambda: None
         if data is None:
             data = {}
-        super().__init__()
+        # using ``super`` (especially from ``future``) can be tricky in this case (so don't use it)!
+        super_ = object
+        super_.__init__(self)
         self.__dict__ = defaultdict(default_factory, data)
 
     def __dir__(self):
@@ -92,9 +88,11 @@ class Namespace(object):
         return "%s(%s)" % (type(self).__name__, sorted(dict(self.__dict__)))
 
     def __getattribute__(self, item):
-        if item in ['__dict__']:
-            return super().__getattribute__('__dict__')
-        return super().__getattribute__('__dict__')[item]
+        # using ``super`` (especially from ``future``) can be tricky in this case (so don't use it)!
+        super_ = object
+        if str(item).startswith('__'):
+            return super_.__getattribute__(self, item)
+        return super_.__getattribute__(self, '__dict__')[item]
 
 
 class ImmutableNamespace(Namespace):
