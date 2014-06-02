@@ -366,23 +366,24 @@ class Application(object):
             self.log.debug('args = {0!s}'.format(vars(self.args)))
             self.log.debug('log_name = "{0!s}"'.format(self.log.name))
 
-            self.log.info('Executing initialization hook.')
+            self.log.debug('Executing initialization hook.')
             self._initialize()
-            self.log.info('Executing primary function.')
+            self.log.debug('Executing primary function.')
             self._main(**kwargs)
-            self.log.info('Primary function exited cleanly. Executing success hook.')
+            self.log.debug('Primary function exited cleanly. Executing success hook.')
 
         except Exception as e:
-            self.log.info('An exception occurred! Executing failure hook.')
+            self.log.critical('An exception occurred! Executing failure hook.')
             self._on_failure()
             with StringIO() as err_msg:
                 print(e, file=err_msg)
                 traceback.print_exc(file=err_msg)
                 self.log.critical(err_msg.getvalue())
         else:
+            self.log.debug('Executing success hook.')
             self._on_success()
         finally:
-            self.log.info('Executing finalization hook.')
+            self.log.debug('Executing finalization hook.')
             self._finalize()
             self.log.debug('Exiting {app_id}'.format(app_id=self.app_debug_id))
 
