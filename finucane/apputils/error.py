@@ -4,3 +4,6 @@
 class ApputilsError(Exception):
     pass
 
+
+class ArgumentParseError(ApputilsError):
+    pass

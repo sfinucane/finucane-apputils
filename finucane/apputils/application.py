@@ -50,6 +50,7 @@ else:
 
 #from .dictattraccessor import DictAttrAccessor
 from .namespace import Namespace, ImmutableNamespace
+from .error import ArgumentParseError
 
 
 class ApplicationConfig(configparser.ConfigParser):
@@ -79,9 +80,19 @@ def NetloggerAddressParse(url, *args, **kwargs):
     """
     """
     s_url = str(url)
+    first_pass = urlparse(s_url)
+    # first pass:
+    if first_pass.hostname and first_pass.port:
+        return first_pass
+    # second pass:
     if not s_url.startswith('//'):
         s_url = "".join(["//", s_url])
-    return urlparse(s_url, *args, **kwargs)
+    second_pass = urlparse(s_url, *args, **kwargs)
+    # sanity check:
+    if second_pass.hostname and second_pass.port:
+        return second_pass
+    # exhausted!
+    raise ArgumentParseError('Cannot determine hostname/port for given netlogger string: "{url}"'.format(url=url))
 
 
 class BasicArgumentParser(argparse.ArgumentParser):
@@ -310,105 +321,118 @@ class Application(object):
         self.app_debug_id = '{c}.{f}'.format(c=str(self.__class__).strip().split("'")[1],
                                              f=inspect.currentframe().f_code.co_name)
 
-        # initialize the application based on given arguments.
-        parsed_args = self._arg_parser.parse_args(args)
-
-        # grab things that should NOT be left in the args container
-        self.config = parsed_args.config if hasattr(parsed_args, 'config') else ApplicationConfig(file_path=None)
-        parsed_args.config = None
-
-        # all arguments in ``self.args`` must be a list! Make it so.
-        for key, value in vars(parsed_args).items():
-            if not isinstance(value, list):
-                setattr(parsed_args, key, [value])
-
-        self.args = ImmutableNamespace(default_factory=lambda: [None], data=vars(parsed_args))
-
-        assert hasattr(self.args, 'verbosity')
-
-        # logging facility
-        self.log = logging.getLogger(self.id_)
-
-        assert self.log is not None
-        assert hasattr(self.log, 'critical')
-        assert hasattr(self.log, 'error')
-        assert hasattr(self.log, 'warning')
-        assert hasattr(self.log, 'info')
-        assert hasattr(self.log, 'debug')
-
-        logging_level = logging.CRITICAL
-        if self.args.verbosity[-1] == 1:
-            logging_level = logging.ERROR
-        elif self.args.verbosity[-1] == 2:
-            logging_level = logging.WARNING
-        elif self.args.verbosity[-1] == 3:
-            logging_level = logging.INFO
-        elif self.args.verbosity[-1] > 3:
-            logging_level = logging.DEBUG
-
-        self.log.setLevel(logging_level)
-
-        if self.stdlog is not None:
-            # events with a level above that of ERROR
-            self._stdlog_handler = logging.StreamHandler(self.stdlog)
-            stdlog_formatter = logging.Formatter(self.STDLOG_FSPEC)
-            self._stdlog_handler.setFormatter(stdlog_formatter)
-            self._stdlog_handler.addFilter(LogAboveErrorFilter())
-            self.log.addHandler(self._stdlog_handler)
-
-        self._netlog_handler = []
-        addresses = []
-        for url in self.args.netlogger_url:
-            if url is not None:
-                addresses.append({'host': url.hostname, 'port': url.port})
-
-        for address in addresses:
-            if address['host'] is not None and address['port'] is not None:
-                # a network capable logging facility (remote possibilities, etc.)
-                self._netlog_handler.append(logging.handlers.SocketHandler(address['host'], address['port']))
-                self.log.addHandler(self._netlog_handler[-1])
-
-        if self.stderr is not None:
-            # events with a level of ERROR and below
-            self._stderr_handler = logging.StreamHandler(self.stderr)
-            stderr_formatter = logging.Formatter(self.STDERR_FSPEC)
-            self._stderr_handler.setFormatter(stderr_formatter)
-            self._stderr_handler.setLevel(logging.ERROR)
-            self.log.addHandler(self._stderr_handler)
-
-        self.log.debug('Preparing {app_id} environment.'.format(app_id=self.app_debug_id))
-
-        # ready to roll!
-        self.log.debug('Entering {app_id}'.format(app_id=self.app_debug_id))
         try:
-            assert self.config is not None
-            assert self.args is not None
+            # logging facility
+            self.log = logging.getLogger(self.id_)
 
-            self.log.debug('config = {0!s}'.format(self.config.as_dict()))
-            self.log.debug('args = {0!s}'.format(vars(self.args)))
-            self.log.debug('log_name = "{0!s}"'.format(self.log.name))
+            assert self.log is not None
+            assert hasattr(self.log, 'critical')
+            assert hasattr(self.log, 'error')
+            assert hasattr(self.log, 'warning')
+            assert hasattr(self.log, 'info')
+            assert hasattr(self.log, 'debug')
 
-            self.log.debug('Executing initialization hook.')
-            self._initialize()
-            self.log.debug('Executing primary function.')
-            self._main(**kwargs)
-            self.log.debug('Primary function exited cleanly. Executing success hook.')
+            if self.stdlog is not None:
+                # events with a level above that of ERROR
+                self._stdlog_handler = logging.StreamHandler(self.stdlog)
+                stdlog_formatter = logging.Formatter(self.STDLOG_FSPEC)
+                self._stdlog_handler.setFormatter(stdlog_formatter)
+                self._stdlog_handler.addFilter(LogAboveErrorFilter())
+                self.log.addHandler(self._stdlog_handler)
 
-        except Exception as e:
-            self.log.critical('An exception occurred! Executing failure hook.')
-            self._on_failure()
-            with StringIO() as err_msg:
-                print(e, file=err_msg)
-                traceback.print_exc(file=err_msg)
-                self.log.critical(err_msg.getvalue())
-        else:
-            self.log.debug('Executing success hook.')
-            self._on_success()
+            if self.stderr is not None:
+                # events with a level of ERROR and below
+                self._stderr_handler = logging.StreamHandler(self.stderr)
+                stderr_formatter = logging.Formatter(self.STDERR_FSPEC)
+                self._stderr_handler.setFormatter(stderr_formatter)
+                self._stderr_handler.setLevel(logging.ERROR)
+                self.log.addHandler(self._stderr_handler)
+
+            # default logging level before full init is CRITICAL
+            self.log.setLevel(logging.CRITICAL)
+
+            # initialize the application based on given arguments.
+            try:
+                parsed_args = self._arg_parser.parse_args(args)
+            except ArgumentParseError as e:
+                self.log.critical(e)
+                raise e
+
+            # grab things that should NOT be left in the args container
+            self.config = parsed_args.config if hasattr(parsed_args, 'config') else ApplicationConfig(file_path=None)
+            parsed_args.config = None
+
+            # all arguments in ``self.args`` must be a list! Make it so.
+            for key, value in vars(parsed_args).items():
+                if not isinstance(value, list):
+                    setattr(parsed_args, key, [value])
+
+            self.args = ImmutableNamespace(default_factory=lambda: [None], data=vars(parsed_args))
+
+            # logging configuration details
+            assert hasattr(self.args, 'verbosity')
+
+            logging_level = logging.CRITICAL
+            if self.args.verbosity[-1] == 1:
+                logging_level = logging.ERROR
+            elif self.args.verbosity[-1] == 2:
+                logging_level = logging.WARNING
+            elif self.args.verbosity[-1] == 3:
+                logging_level = logging.INFO
+            elif self.args.verbosity[-1] > 3:
+                logging_level = logging.DEBUG
+
+            self.log.setLevel(logging_level)
+
+            self._netlog_handler = []
+            addresses = []
+            for url in self.args.netlogger_url:
+                if url is not None:
+                    addresses.append({'host': url.hostname, 'port': url.port})
+
+            for address in addresses:
+                if address['host'] is not None and address['port'] is not None:
+                    # a network capable logging facility (remote possibilities, etc.)
+                    self._netlog_handler.append(logging.handlers.SocketHandler(address['host'], address['port']))
+                    self.log.addHandler(self._netlog_handler[-1])
+
+            self.log.debug('Preparing {app_id} environment.'.format(app_id=self.app_debug_id))
+
+            # ready to roll!
+            self.log.debug('Entering {app_id}'.format(app_id=self.app_debug_id))
+            try:
+                assert self.config is not None
+                assert self.args is not None
+
+                self.log.debug('config = {0!s}'.format(self.config.as_dict()))
+                self.log.debug('args = {0!s}'.format(vars(self.args)))
+                self.log.debug('log_name = "{0!s}"'.format(self.log.name))
+
+                self.log.debug('Executing initialization hook.')
+                self._initialize()
+                self.log.debug('Executing primary function.')
+                self._main(**kwargs)
+                self.log.debug('Primary function exited cleanly. Executing success hook.')
+
+            except Exception as e:
+                self.log.critical('An exception occurred! Executing failure hook.')
+                self._on_failure()
+                with StringIO() as err_msg:
+                    print(e, file=err_msg)
+                    traceback.print_exc(file=err_msg)
+                    self.log.critical(err_msg.getvalue())
+            else:
+                self.log.debug('Executing success hook.')
+                self._on_success()
+            finally:
+                self.log.debug('Executing finalization hook.')
+                self._finalize()
+                self.log.debug('Exiting {app_id}'.format(app_id=self.app_debug_id))
+
+        except ArgumentParseError as e:
+            pass
+
         finally:
-            self.log.debug('Executing finalization hook.')
-            self._finalize()
-            self.log.debug('Exiting {app_id}'.format(app_id=self.app_debug_id))
-
             # tear-down the logging facility
             if hasattr(self, '_stdlog_handler') and self._stdlog_handler is not None:
                 self.log.removeHandler(self._stdlog_handler)
@@ -422,7 +446,6 @@ class Application(object):
                         self.log.removeHandler(handler)
                 else:
                     self.log.removeHandler(self._netlog_handler)
-
                 self._netlog_handler = None
 
 
