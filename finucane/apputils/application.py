@@ -124,7 +124,8 @@ class Application(object):
     STDERR_FSPEC = STDLOG_FSPEC
 
     def __init__(self, name='', version='0.1.0', description='', epilog='', default_config_file=None,
-                 stdout=sys.stdout, stderr=sys.stderr, stdlog=sys.stderr, credits=None, organization=''):
+                 stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, stdlog=sys.stderr,
+                 credits=None, organization=''):
         object.__init__(self)
         self.name = name
 
@@ -139,6 +140,8 @@ class Application(object):
         self.epilog = epilog
         self.organization = organization
         self.credits = credits
+
+        self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
         self.stdlog = stdlog
