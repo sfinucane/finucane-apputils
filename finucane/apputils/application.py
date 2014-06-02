@@ -45,7 +45,8 @@ else:
 
 from collections import defaultdict
 
-from .dictattraccessor import DictAttrAccessor
+#from .dictattraccessor import DictAttrAccessor
+from .namespace import Namespace
 
 
 class ApplicationConfig(configparser.ConfigParser):
@@ -148,15 +149,17 @@ class Application(object):
         self.config = None
         self.log = None
 
-        self.state = DictAttrAccessor(dict_=defaultdict(lambda: None))  # dict with default type of None (2.x & 3.x)
+        self.state = Namespace(defaultdict(lambda: None))  # dict with default type of None (2.x & 3.x)
 
+        self.args = Namespace()
         # argument parser
         self._arg_parser = BasicArgumentParser(default_config_file=default_config_file,
                                                prog=name,
                                                description=description,
                                                epilog=epilog,
                                                formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                               fromfile_prefix_chars='@')
+                                               fromfile_prefix_chars='@',
+                                               namespace=self.args)
         self._arg_parser.add_argument(
             '--version', action='version', version='%(prog)s {vers}'.format(vers=self.version))
 
