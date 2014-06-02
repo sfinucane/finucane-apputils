@@ -21,7 +21,7 @@ try:
 except AttributeError:
     __python_version__['minor'] = sys.version_info[1]
 
-import argparse  # included in Python >2.7
+import argparse  # included in Python >2.7, but not 2.6
 
 try:
     import configparser  # Python 3.x
@@ -43,10 +43,8 @@ else:
         def __exit__(self, exc_type, exc_val, exc_tb):
             self.close()
 
-from collections import defaultdict
-
 #from .dictattraccessor import DictAttrAccessor
-from .namespace import Namespace
+from .namespace import Namespace, ImmutableNamespace
 
 
 class ApplicationConfig(configparser.ConfigParser):
@@ -77,7 +75,7 @@ class BasicArgumentParser(argparse.ArgumentParser):
     """
     def __init__(self, default_config_file=None, **kwargs):
         argparse.ArgumentParser.__init__(self, **kwargs)
-        self.add_argument('-v', '--verbose', dest='verbose', action='count', default=0,
+        self.add_argument('-v', '--verbose', dest='verbosity', action='count', default=0,
                           help='output additional information to stderr (more v\'s mean more output, 4 is maximal)')
         # Only enable the config option is the default config is not set to None.
         if default_config_file is not None:
@@ -149,17 +147,15 @@ class Application(object):
         self.config = None
         self.log = None
 
-        self.state = Namespace(defaultdict(lambda: None))  # dict with default type of None (2.x & 3.x)
+        self.state = Namespace()
 
-        self.args = Namespace()
         # argument parser
         self._arg_parser = BasicArgumentParser(default_config_file=default_config_file,
                                                prog=name,
                                                description=description,
                                                epilog=epilog,
                                                formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-                                               fromfile_prefix_chars='@',
-                                               namespace=self.args)
+                                               fromfile_prefix_chars='@')
         self._arg_parser.add_argument(
             '--version', action='version', version='%(prog)s {vers}'.format(vers=self.version))
 
@@ -301,9 +297,20 @@ class Application(object):
                                              f=inspect.currentframe().f_code.co_name)
 
         # initialize the application based on given arguments.
-        self.args = self._arg_parser.parse_args(args)
-        self.config = self.args.config if hasattr(self.args, 'config') else ApplicationConfig(file_path=None)
-        assert hasattr(self.args, 'verbose')
+        parsed_args = self._arg_parser.parse_args(args)
+
+        # grab things that should NOT be left in the args container
+        self.config = parsed_args.config if hasattr(parsed_args, 'config') else ApplicationConfig(file_path=None)
+        parsed_args.config = None
+
+        # all arguments in ``self.args`` must be a list! Make it so.
+        for key, value in vars(parsed_args).items():
+            if not isinstance(value, list):
+                setattr(parsed_args, key, [value])
+
+        self.args = ImmutableNamespace(default_factory=lambda: [None], data=vars(parsed_args))
+
+        assert hasattr(self.args, 'verbosity')
 
         # logging facility
         self.log = logging.getLogger(self.id_)
@@ -316,11 +323,11 @@ class Application(object):
         assert hasattr(self.log, 'debug')
 
         logging_level = logging.ERROR
-        if self.args.verbose == 1:
+        if self.args.verbosity[-1] == 1:
             logging_level = logging.WARNING
-        elif self.args.verbose == 2:
+        elif self.args.verbosity[-1] == 2:
             logging_level = logging.INFO
-        elif self.args.verbose > 2:
+        elif self.args.verbosity[-1] > 2:
             logging_level = logging.DEBUG
 
         self.log.setLevel(logging_level)
@@ -333,10 +340,11 @@ class Application(object):
             self._stdlog_handler.addFilter(LogAboveErrorFilter())
             self.log.addHandler(self._stdlog_handler)
 
-        if self.args.netlog_host and self.args.netlog_port:
-            # a network capable logging facility (remote possibilities, etc.)
-            self._netlog_handler = logging.handlers.SocketHandler(self.args.netlog_host, self.args.netlog_port)
-            self.log.addHandler(self._netlog_handler)
+        for address in zip(self.args.netlog_host, self.args.netlog_port):
+            if address[0] is not None and address[1] is not None:
+                # a network capable logging facility (remote possibilities, etc.)
+                self._netlog_handler.append(logging.handlers.SocketHandler(*address))
+                self.log.addHandler(self._netlog_handler[-1])
 
         if self.stderr is not None:
             # events with a level of ERROR and below
@@ -347,10 +355,6 @@ class Application(object):
             self.log.addHandler(self._stderr_handler)
 
         self.log.debug('Preparing {app_id} environment.'.format(app_id=self.app_debug_id))
-        # all arguments in ``self.args`` must be a list! Make it so.
-        for key, value in vars(self.args).items():
-            if not isinstance(value, list):
-                setattr(self.args, key, [value])
 
         # ready to roll!
         self.log.debug('Entering {app_id}'.format(app_id=self.app_debug_id))
@@ -390,5 +394,9 @@ class Application(object):
                 self.log.removeHandler(self._stderr_handler)
 
             if hasattr(self, '_netlog_handler') and self._netlog_handler is not None:
-                self.log.removeHandler(self._netlog_handler)
+                if isinstance(self._netlog_handler, list):
+                    for handler in self._netlog_handler:
+                        self.log.removeHandler(handler)
+                else:
+                    self.log.removeHandler(self._netlog_handler)
 
