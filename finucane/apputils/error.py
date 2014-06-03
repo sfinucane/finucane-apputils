@@ -8,9 +8,9 @@
 """
 
 
-class ApputilsError(Exception):
+class Error(Exception):
     pass
 
 
-class ArgumentParseError(ApputilsError):
+class ArgumentParseError(Error):
     pass
