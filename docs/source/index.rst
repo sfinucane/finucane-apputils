@@ -75,6 +75,7 @@ Links
 .. _PyPi: https://pypi.python.org/pypi/finucane-apputils
 .. _wiki: https://github.com/sfinucane/finucane-apputils/wiki
 .. _tracker: https://github.com/sfinucane/finucane-apputils/issues
+.. _Style_Guide: http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
 
 License
 =======
