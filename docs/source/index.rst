@@ -24,7 +24,7 @@ future-proof (as long as the core functionality of the tool doesn't break in way
 This means that if the API for the underlying argument parsing library changes, ``finucane-apputils`` can be updated to
 propagate that change to all of your tools at once.
 
-Finucane-Apputils works with Python 3 (tested on ≥ 3.2), and Python 2 (≥ 2.6), with no transformations or 2to3,
+Finucane-Apputils works with Python 3 (tested on ≥ 3.2), and Python 2 (tested on ≥ 2.7), with no transformations or 2to3,
 thanks to the ``future`` package.
 
 Please don't hesitate to report issues to our tracker_ on GitHub.
