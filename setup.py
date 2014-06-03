@@ -69,7 +69,7 @@ setup(name='finucane-apputils',
       zip_safe=True,
       platforms='any',
       provides=['finucane.apputils'],
-      data_files=[('', ['README.md', 'LICENSE', 'NOTICE'])],
+      data_files=[('', ['README.md', 'LICENSE', 'NOTICE', 'requirements.txt'])],
       namespace_packages=["finucane"],
       packages=list(find_packages(finucane.__path__, finucane.__name__)),
       )
