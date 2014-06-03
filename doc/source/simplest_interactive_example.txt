@@ -1,0 +1,8 @@
+>>> from finucane.apputils import Application
+>>> class MyApp(Application):
+...    def _main(self, message=None):
+...        self.print(message)
+...
+>>> app = MyApp()
+>>> app.run(message='Hello World!')
+Hello World!
