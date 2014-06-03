@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Example Google style docstrings.
 
@@ -30,35 +29,16 @@ Attributes:
 
 """
 # Python 2.6 and newer support
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-from future.builtins import (
-                bytes, dict, int, list, object, range, str,
-                ascii, chr, hex, input, next, oct, open,
-                pow, round, super,
-                filter, map, zip)
-try:
-    unicode()
-except NameError:
-    unicode = str
-
-import sys
-__python_version__ = dict()
-try:
-    __python_version__['major'] = sys.version_info.major
-except AttributeError:
-    __python_version__['major'] = sys.version_info[0]
-try:
-    __python_version__['minor'] = sys.version_info.minor
-except AttributeError:
-    __python_version__['minor'] = sys.version_info[1]
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+from finucane.apputils.compatibility import make_compatible
+make_compatible(globals())
 
 
 __all__ = ("Namespace", "as_namespace")
 
 from collections import Mapping, Sequence, defaultdict
 
-from .error import ApputilsError
+from .errors import ApputilsError
 
 
 class NamespaceError(ApputilsError):

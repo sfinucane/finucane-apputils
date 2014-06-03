@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Example Google style docstrings.
 
@@ -30,36 +29,17 @@ Attributes:
 
 """
 # Python 2.6 and newer support
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
-
-try:
-    unicode()
-except NameError:
-    unicode = str
+from __future__ import (absolute_import, division, print_function, unicode_literals)
+from finucane.apputils.compatibility import make_compatible
+make_compatible(globals())
 
 import sys
-__python_version__ = dict()
-try:
-    __python_version__['major'] = sys.version_info.major
-except AttributeError:
-    __python_version__['major'] = sys.version_info[0]
-try:
-    __python_version__['minor'] = sys.version_info.minor
-except AttributeError:
-    __python_version__['minor'] = sys.version_info[1]
-
-import argparse  # included in Python >2.7, but not 2.6
-
-try:
-    import configparser  # Python 3.x
-except ImportError:
-    import ConfigParser as configparser  # Python 2.x
-
 import logging
 import logging.handlers
 import traceback
 import inspect
+
+import argparse  # included in Python >2.7, but not 2.6
 
 if __python_version__['major'] > 2:
     from io import StringIO
@@ -76,32 +56,9 @@ if __python_version__['major'] > 2:
 else:
     from urlparse import urlparse
 
-#from .dictattraccessor import DictAttrAccessor
 from .namespace import Namespace, ImmutableNamespace
-from .error import ArgumentParseError
-
-
-class ApplicationConfig(configparser.ConfigParser):
-    """
-    """
-    def __init__(self, file_path):
-        configparser.ConfigParser.__init__(self)
-        self._file_path = file_path
-        if file_path is not None:
-            self.read(file_path)
-
-    def as_dict(self):
-        d = dict(self._sections)
-        for k in d:
-            d[k] = dict(self._defaults, **d[k])
-            d[k].pop('__name__', None)
-        return d
-
-    def __str__(self):
-        return 'ApplicationConfig("{path}")'.format(path=self._file_path)
-
-    def __repr__(self):
-        return self.__str__()
+from .errors import ApputilsParseError
+from .application_config import ApplicationConfig
 
 
 def NetloggerAddressParse(url, *args, **kwargs):
@@ -146,7 +103,7 @@ def NetloggerAddressParse(url, *args, **kwargs):
     if second_pass.hostname and second_pass.port:
         return second_pass
     # exhausted!
-    raise ArgumentParseError('Cannot determine hostname/port for given netlogger string: "{url}"'.format(url=url))
+    raise ApputilsParseError('Cannot determine hostname/port for given netlogger string: "{url}"'.format(url=url))
 
 
 class BasicArgumentParser(argparse.ArgumentParser):
@@ -416,7 +373,7 @@ class Application(object):
             # initialize the application based on given arguments.
             try:
                 parsed_args = self._arg_parser.parse_args(args)
-            except ArgumentParseError as e:
+            except ApputilsParseError as e:
                 self.log.critical(e)
                 raise e
 
@@ -491,7 +448,7 @@ class Application(object):
                 self._finalize()
                 self.log.debug('Exiting {app_id}'.format(app_id=self.app_debug_id))
 
-        except ArgumentParseError as e:
+        except ApputilsParseError as e:
             pass
 
         finally:
