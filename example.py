@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 """
+.. module:: example
+   :platform: All
+   :synopsis: Write me.
+
+.. moduleauthor:: Sean Anthony Finucane <s.finucane001@gmail.com>
 """
 # Python 2.6 and newer support
 from __future__ import (absolute_import, division,

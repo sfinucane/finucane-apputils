@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 """
+.. module:: application
+   :platform: All
+   :synopsis: Write me.
+
+.. moduleauthor:: Sean Anthony Finucane <s.finucane001@gmail.com>
 """
 # Python 2.6 and newer support
 from __future__ import (absolute_import, division,
@@ -77,7 +82,31 @@ class ApplicationConfig(configparser.ConfigParser):
 
 
 def NetloggerAddressParse(url, *args, **kwargs):
-    """
+    """This function does something.
+
+    Args:
+       name (str):  The name to use.
+
+    Kwargs:
+       state (bool): Current state to be in.
+
+    Returns:
+       int.  The return code::
+
+          0 -- Success!
+          1 -- No good.
+          2 -- Try again.
+
+    Raises:
+       AttributeError, KeyError
+
+    A really great idea.  A way you might use me is
+
+    >>> print public_fn_with_googley_docstring(name='foo', state=None)
+    0
+
+    BTW, this always returns 0.  **NEVER** use with :class:`MyPublicClass`.
+
     """
     s_url = str(url)
     first_pass = urlparse(s_url)

@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 """
+.. module:: setup
+   :platform: All
+   :synopsis: Write me.
+
+.. moduleauthor:: Sean Anthony Finucane <s.finucane001@gmail.com>
 """
 import sys
 __python_version__ = dict()
