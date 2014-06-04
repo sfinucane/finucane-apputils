@@ -1,6 +1,7 @@
 .. py:module:: finucane.apputils
 
-This is something I want to say that is not in the docstring.
+These are not the droids you're looking for.
    
-.. autoclass:: Application
-   :members:
+.. include:: api/apputils.rst
+
+.. include:: api/modules.rst
