@@ -17,6 +17,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
+# Python 2.6 and newer support
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from finucane.apputils.compatibility import upgrade_namespace
+upgrade_namespace(globals())
 
 
 class ApputilsError (Exception):

@@ -17,9 +17,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 # Python 2.6 and newer support
-from __future__ import (absolute_import, division, print_function, unicode_literals)
-from finucane.apputils.compatibility import make_yesterpy_compatible
-make_yesterpy_compatible(globals())
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from finucane.apputils.compatibility import upgrade_namespace
+upgrade_namespace(globals())
 
 import sys
 import time
@@ -43,6 +44,30 @@ class MyApp(Application):
                          epilogue=PROGRAM_EPILOGUE,
                          organization=ORGANIZATION,
                          default_config_file=DEFAULT_CONFIG_FILE)
+
+        self.arg_parser.add_argument(
+            'intro',
+            help_='the message to give to the user (e.g., "Welcome aboard!")')
+
+        self.arg_parser.add_restricted_argument(
+            'free', choices=['speech', 'beer'],
+            help_='choose wisely, but don\'t stall man')
+
+        self.arg_parser.add_option(
+            'username', unix_flag='u', default='John Doe',
+            help_="the username to use. repeatable. in this case only the final name specified will be used")
+
+        self.arg_parser.add_counted_option(
+            'awesomeness level', unix_flag='a',
+            help_='Adds awesomeness (the more, the greater the awesome level).')
+
+        self.arg_parser.add_restricted_option(
+            'flavor', choices=['chocolate', 'vanilla', 'strawberry'],
+            help_='your favorite flavor')
+
+        self.arg_parser.add_switch(
+            'show intro', unix_flag='s',
+            help_='if set, the welcome message is shown')
 
     def _initialize(self):
         if self.state.exec_time is not None:
@@ -72,30 +97,6 @@ class MyApp(Application):
 
 if __name__ == '__main__':
     app = MyApp(name=sys.argv[0], stdout=sys.stdout, stderr=sys.stderr)
-
-    app.add_argument(
-        'intro',
-        help_='the message to give to the user (e.g., "Welcome aboard!")')
-
-    app.add_restricted_argument(
-        'free', choices=['speech', 'beer'],
-        help_='choose wisely, but don\'t stall man')
-
-    app.add_option(
-        'username', unix_flag='u', default='John Doe',
-        help_="the username to use. repeatable. in this case only the final name specified will be used")
-
-    app.add_counted_option(
-        'awesomeness level', unix_flag='a',
-        help_='Adds awesomeness (the more, the greater the awesome level).')
-
-    app.add_restricted_option(
-        'flavor', choices=['chocolate', 'vanilla', 'strawberry'],
-        help_='your favorite flavor')
-
-    app.add_switch(
-        'show intro', unix_flag='s',
-        help_='if set, the welcome message is shown')
 
     print('Running:', app.app_id, 'with args:', sys.argv[1:])
     app.run(argv=sys.argv[1:], message="It's very nice to meet you!")

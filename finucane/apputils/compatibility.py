@@ -34,13 +34,13 @@ try:
 except AttributeError:
     __python_version__['minor'] = sys.version_info[1]
 
-__enhanced__ = ['bytes', 'dict', 'int', 'list', 'object', 'range', 'str',
+__upgraded__ = ['bytes', 'dict', 'int', 'list', 'object', 'range', 'str',
                  'ascii', 'chr', 'hex', 'input', 'next', 'oct', 'open',
                  'pow', 'round', 'super', 'filter', 'map', 'zip']
 
 
-def make_yesterpy_compatible(namespace):
-    """Makes a namespace backward compatible with earlier versions of Python.
+def upgrade_namespace(namespace):
+    """Applies upgrades to allow code in namespace to run in earlier Python interpreters.
 
     .. warning: The specified namespace will be modified!
     .. note: The specified namespace must be modifiable for this to be
@@ -51,8 +51,8 @@ def make_yesterpy_compatible(namespace):
 
     Example::
 
-        from finucane.apputils.compatibility import make_yesterpy_compatible
-        make_yesterpy_compatible(globals())
+        from finucane.apputils.compatibility import upgrade_namespace
+        upgrade_namespace(globals())
 
     Args:
         namespace: A namespace instance (dict, usually the return value of
@@ -64,9 +64,9 @@ def make_yesterpy_compatible(namespace):
     namespace['future'] = __import__('future', globals=namespace,
                                      fromlist=[], level=0)
     enhanced_ = __import__('future.builtins', globals=namespace,
-                           fromlist=__enhanced__, level=0)
+                           fromlist=__upgraded__, level=0)
 
-    for import_name in __enhanced__:
+    for import_name in __upgraded__:
         namespace[import_name] = getattr(enhanced_, import_name)
 
     if 'unicode' not in namespace:
