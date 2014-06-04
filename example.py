@@ -28,13 +28,22 @@ from finucane.apputils import Application
 __version__ = '0.1.0'
 
 PROGRAM_DESCRIPTION = 'An example application which showcases the Finucane Research apputils framework.'
-PROGRAM_EPILOG = 'See http://www.github.com/sfinucane/finucane-apputils for more information.\nCopyright (c) 2014 Sean A. Finucane'
+PROGRAM_EPILOGUE = 'See http://www.github.com/sfinucane/finucane-apputils for more information.\nCopyright (c) 2014 Sean A. Finucane'
 ORGANIZATION = 'Finucane Research'
 
 DEFAULT_CONFIG_FILE = 'app.ini'
 
 
 class MyApp(Application):
+    def __init__(self, name='', stdout=sys.stdout, stderr=sys.stderr,
+                 stdlog=sys.stderr):
+        super().__init__(name=name,
+                         stdout=stdout, stderr=stderr, stdlog=stdlog,
+                         description=PROGRAM_DESCRIPTION,
+                         epilogue=PROGRAM_EPILOGUE,
+                         organization=ORGANIZATION,
+                         default_config_file=DEFAULT_CONFIG_FILE)
+
     def _initialize(self):
         if self.state.exec_time is not None:
             self.print('Previous execution timestamp:', self.state.exec_time)
@@ -62,28 +71,32 @@ class MyApp(Application):
 
 
 if __name__ == '__main__':
-    app = MyApp(name=sys.argv[0],
-                description=PROGRAM_DESCRIPTION,
-                epilog=PROGRAM_EPILOG,
-                organization=ORGANIZATION,
-                default_config_file=DEFAULT_CONFIG_FILE,
-                stdout=sys.stdout,
-                stderr=sys.stderr)
+    app = MyApp(name=sys.argv[0], stdout=sys.stdout, stderr=sys.stderr)
 
-    app.add_argument('intro',
-                     help_='the message to give to the user (e.g., "Welcome aboard!")')
-    app.add_restricted_argument('free', choices=['speech', 'beer'],
-                                help_='choose wisely, but don\'t stall man')
-    app.add_option('username', unix_flag='u', default='John Doe',
-                   help_="the username to use. repeatable. in this case only the final name specified will be used")
-    app.add_counted_option('awesomeness level', unix_flag='a',
-                           help_='Adds awesomeness (the more, the greater the awesome level).')
-    app.add_restricted_option('flavor', choices=['chocolate', 'vanilla', 'strawberry'],
-                              help_='your favorite flavor')
-    app.add_switch('show intro', unix_flag='s',
-                   help_='if set, the welcome message is shown')
+    app.add_argument(
+        'intro',
+        help_='the message to give to the user (e.g., "Welcome aboard!")')
 
+    app.add_restricted_argument(
+        'free', choices=['speech', 'beer'],
+        help_='choose wisely, but don\'t stall man')
 
-    print('Running:', app.id_, 'with args:', sys.argv[1:])
+    app.add_option(
+        'username', unix_flag='u', default='John Doe',
+        help_="the username to use. repeatable. in this case only the final name specified will be used")
+
+    app.add_counted_option(
+        'awesomeness level', unix_flag='a',
+        help_='Adds awesomeness (the more, the greater the awesome level).')
+
+    app.add_restricted_option(
+        'flavor', choices=['chocolate', 'vanilla', 'strawberry'],
+        help_='your favorite flavor')
+
+    app.add_switch(
+        'show intro', unix_flag='s',
+        help_='if set, the welcome message is shown')
+
+    print('Running:', app.app_id, 'with args:', sys.argv[1:])
     app.run(argv=sys.argv[1:], message="It's very nice to meet you!")
     app.run(argv=sys.argv[1:], message='Hello again!')

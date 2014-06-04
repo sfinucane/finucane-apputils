@@ -24,6 +24,7 @@ import logging
 import logging.handlers
 import traceback
 import inspect
+from uuid import uuid4 as uuid
 
 if __python_version__['major'] > 2:
     from io import StringIO
@@ -62,14 +63,15 @@ class ApplicationKernel(object):
     from this class, a developer must implement the ``_main`` method.
 
     Attributes:
-        likes_spam: A boolean indicating if we like SPAM or not.
+        app_id: A boolean indicating if we like SPAM or not.
         eggs: An integer count of the eggs we have laid.
     """
     STDLOG_FSPEC = '[pid: %(process)d | log: %(name)s | level: %(levelname)s | time: %(asctime)s]\n\t>>> %(message)s'
     STDERR_FSPEC = STDLOG_FSPEC
 
-    def __init__(self, name='', version='0.1.0', description='', epilog='',
-                 stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, stdlog=sys.stderr,
+    def __init__(self, name='', version='0.1.0', description='', epilogue='',
+                 stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr,
+                 stdlog=sys.stderr,
                  credits=None, organization=''):
         object.__init__(self)
         self.name = name
@@ -79,12 +81,12 @@ class ApplicationKernel(object):
         self._stderr_handler = None
         self._netlog_handler = None
 
-        self.version = version
-        self.full_name = '{n}, version {v}'.format(n=name, v=version)
-        self.description = description
-        self.epilog = epilog
-        self.organization = organization
-        self.credits = credits
+        self._version = version
+        self._full_name = '{n}, version {v}'.format(n=name, v=version)
+        self._description = description
+        self._epilogue = epilogue
+        self._organization = organization
+        self._credits = credits
 
         self.stdin = stdin
         self.stdout = stdout
@@ -98,14 +100,56 @@ class ApplicationKernel(object):
 
         self.state = Namespace()
 
+        # instance UUID:
+        self._uuid = uuid()
+
     @property
-    def id_(self):
+    def version(self):
+        return self._version
+
+    @property
+    def full_name(self):
+        return self._full_name
+
+    @property
+    def description(self):
+        return self._description
+
+    @property
+    def epilogue(self):
+        return self._epilogue
+
+    @property
+    def organization(self):
+        return self._organization
+
+    @property
+    def credits(self):
+        return self._credits
+
+    @property
+    def uuid(self):
+        return self._uuid
+
+    @property
+    def app_id(self):
+        """A unique identifier string for the APPLICATION (not the instance)."""
         organization = self.organization.lower().strip().replace('.', '-').replace(' ', '_')
         name = self.name.lower().strip().replace('.', '-').replace(' ', '_')
         version = self.version.lower().strip().replace('.', '-').replace(' ', '_')
         return '{org}.{name}.{vers}'.format(org=organization, name=name, vers=version)
 
+    @property
+    def id_(self):
+        """A unique identifier string for the application instance."""
+        return "".join([self.app_id, '.', str(self.uuid)])
+
     def print(self, *args, **kwargs):
+        """Print ``*args`` to ``self.stdout``, unless other out file given.
+
+        Essentially, this is an alias for the built-in print function which
+        prints to the calling instance's ``stdout`` by default.
+        """
         if 'file' in kwargs:
             return print(*args, **kwargs)
         else:
@@ -126,16 +170,22 @@ class ApplicationKernel(object):
     def _finalize(self):
         pass
 
+    def __call__(self, *args, **kwargs):
+        """Alias for ``run`` method."""
+        return self.run(*args, **kwargs)
+
     def exec_(self, *args, **kwargs):
-        self.run(*args, **kwargs)
+        """Alias for ``run`` method."""
+        return self.run(*args, **kwargs)
 
     def run(self, argv=[], *args, **kwargs):
+
         self.app_debug_id = '{c}.{f}'.format(c=str(self.__class__).strip().split("'")[1],
                                              f=inspect.currentframe().f_code.co_name)
 
         try:
             # logging facility
-            self.log = logging.getLogger(self.id_)
+            self.log = logging.getLogger(self.app_id)
 
             assert self.log is not None
             assert hasattr(self.log, 'critical')
@@ -278,7 +328,7 @@ class Application(ApplicationKernel):
         likes_spam: A boolean indicating if we like SPAM or not.
         eggs: An integer count of the eggs we have laid.
     """
-    def __init__(self, name='', version='0.1.0', description='', epilog='',
+    def __init__(self, name='', version='0.1.0', description='', epilogue='',
                  default_config_file=None,
                  stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr,
                  stdlog=sys.stderr,
@@ -294,7 +344,7 @@ class Application(ApplicationKernel):
         self.version = version
         self.full_name = '{n}, version {v}'.format(n=name, v=version)
         self.description = description
-        self.epilog = epilog
+        self.epilog = epilogue
         self.organization = organization
         self.credits = credits
 
@@ -313,13 +363,13 @@ class Application(ApplicationKernel):
         self.arg_parser = BasicArgumentParser(default_config_file=default_config_file,
                                                prog=name,
                                                description=description,
-                                               epilog=epilog,
+                                               epilog=epilogue,
                                                fromfile_prefix_chars='@')
         self.arg_parser.add_argument(
             '--version', action='version', version='%(prog)s {vers}'.format(vers=self.version))
 
     @property
-    def id_(self):
+    def app_id(self):
         organization = self.organization.lower().strip().replace('.', '-').replace(' ', '_')
         name = self.name.lower().strip().replace('.', '-').replace(' ', '_')
         version = self.version.lower().strip().replace('.', '-').replace(' ', '_')
@@ -457,7 +507,7 @@ class Application(ApplicationKernel):
 
         try:
             # logging facility
-            self.log = logging.getLogger(self.id_)
+            self.log = logging.getLogger(self.app_id)
 
             assert self.log is not None
             assert hasattr(self.log, 'critical')
