@@ -101,3 +101,9 @@ if __name__ == '__main__':
     print('Running:', app.app_id, 'with args:', sys.argv[1:])
     app.run(argv=sys.argv[1:], message="It's very nice to meet you!")
     app.run(argv=sys.argv[1:], message='Hello again!')
+
+    import pickle
+    pickled_app = pickle.dumps(app)
+
+    rehydrated = pickle.loads(pickled_app)
+    rehydrated(argv=sys.argv[1:], message='I was pickled, now I am not!')

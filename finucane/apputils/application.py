@@ -133,9 +133,9 @@ class ApplicationBase(object):
     @property
     def app_id(self):
         """A unique identifier string for the APPLICATION (not the instance)."""
-        organization = self.organization.lower().strip().replace('.', '-').replace(' ', '_')
-        name = self.name.lower().strip().replace('.', '-').replace(' ', '_')
-        version = self.version.lower().strip().replace('.', '-').replace(' ', '_')
+        organization = str(self.organization).lower().strip().replace('.', '-').replace(' ', '_')
+        name = str(self.name).lower().strip().replace('.', '-').replace(' ', '_')
+        version = str(self.version).lower().strip().replace('.', '-').replace(' ', '_')
         return '{org}.{name}.{vers}'.format(org=organization, name=name, vers=version)
 
     @property
@@ -179,6 +179,28 @@ class ApplicationBase(object):
 
     def run(self, argv=[], *args, **kwargs):
         raise NotImplementedError('Cannot execute purely abstract method!')
+
+    def __getstate__(self):
+        state_data = {k:v for (k,v) in self.state.__dict__.items()
+                      if not str(k).startswith('__')}
+        state_data['__name__'] = self.name
+        state_data['__organization__'] = self.organization
+        state_data['__version__'] = self.version
+        state_data['__description__'] = self.description
+        state_data['__epilogue__'] = self.epilogue
+        state_data['__credits__'] = self.credits
+
+        return state_data
+
+    def __setstate__(self, state):
+        self.__init__()
+        self._name = state.pop('__name__')
+        self._organization = state.pop('__organization__')
+        self._version = state.pop('__version__')
+        self._description = state.pop('__description__')
+        self._epilogue = state.pop('__epilogue__')
+        self._credits = state.pop('__credits__')
+        self.state = Namespace(data=state)
 
 
 class Application(ApplicationBase):
