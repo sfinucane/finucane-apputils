@@ -40,7 +40,7 @@ class MyApp(Application):
             self.print('Previous execution timestamp:', self.state.exec_time)
         self.state.exec_time = time.time()
 
-    def _main(self, message=''):
+    def _main(self, message):
         if self.args.show_intro[-1]:
             self.print('{usr}: {m}'.format(usr=self.args.username[-1], m=self.args.intro[-1]))
         self.print('{usr}: {m}'.format(usr=self.args.username[-1], m=message))
@@ -70,16 +70,20 @@ if __name__ == '__main__':
                 stdout=sys.stdout,
                 stderr=sys.stderr)
 
-    app.add_argument('intro', help_='the message to give to the user (e.g., "Welcome aboard!")')
-    app.add_restricted_argument('free', choices=['speech', 'beer'], help_='choose wisely, but don\'t stall man')
+    app.add_argument('intro',
+                     help_='the message to give to the user (e.g., "Welcome aboard!")')
+    app.add_restricted_argument('free', choices=['speech', 'beer'],
+                                help_='choose wisely, but don\'t stall man')
     app.add_option('username', unix_flag='u', default='John Doe',
                    help_="the username to use. repeatable. in this case only the final name specified will be used")
     app.add_counted_option('awesomeness level', unix_flag='a',
                            help_='Adds awesomeness (the more, the greater the awesome level).')
-    app.add_restricted_option('flavor', choices=['chocolate', 'vanilla', 'strawberry'], help_='your favorite flavor')
-    app.add_switch('show intro', unix_flag='s', help_='if set, the welcome message is shown')
+    app.add_restricted_option('flavor', choices=['chocolate', 'vanilla', 'strawberry'],
+                              help_='your favorite flavor')
+    app.add_switch('show intro', unix_flag='s',
+                   help_='if set, the welcome message is shown')
 
 
     print('Running:', app.id_, 'with args:', sys.argv[1:])
-    app.run(args=sys.argv[1:], message="It's very nice to meet you!")
-    app.run(args=sys.argv[1:], message='Hello again!')
+    app.run(argv=sys.argv[1:], message="It's very nice to meet you!")
+    app.run(argv=sys.argv[1:], message='Hello again!')

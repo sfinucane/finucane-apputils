@@ -11,4 +11,4 @@ class MyApplication(Application):
 if __name__ == '__main__':
     import sys
     app = MyApplication()
-    app.run(args=sys.argv[1:], message="Hello World!")  # alternative: app.exec_(...)
+    app.run(argv=sys.argv[1:], message="Hello World!")  # alternative: app.exec_(...)

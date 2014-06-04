@@ -24,6 +24,9 @@ make_yesterpy_compatible(globals())
 import argparse  # included in Python >2.7, but not 2.6
 
 
+from .config import ApplicationConfig
+
+
 def NetloggerAddressParse(url, *args, **kwargs):
     """Fetches rows from a Bigtable.
 
