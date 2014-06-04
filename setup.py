@@ -1,19 +1,20 @@
 #!/usr/bin/env python
-"""
+"""setup.py
 
 This module demonstrates documentation as specified by the `Google Python
 Style Guide`_. Docstrings may extend over multiple lines. Sections are created
 with a section header and a colon followed by a block of indented text.
 
-Example:
-  Examples can be given using either the ``Example`` or ``Examples``
-  sections. Sections support any reStructuredText formatting, including
-  literal blocks::
+:copyright: (c) 2014 by Sean Anthony Finucane.
+:license: MIT, see LICENSE for more details.
 
-      $ python example_google.py
-
-Section breaks are created by simply resuming unindented text. Section breaks
-are also implicitly created anytime a new section starts.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 """
 import sys
 

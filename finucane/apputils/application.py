@@ -1,45 +1,29 @@
 # -*- coding: utf-8 -*-
-"""Example Google style docstrings.
+"""finucane.apputils.application
 
-This module demonstrates documentation as specified by the `Google Python
-Style Guide`_. Docstrings may extend over multiple lines. Sections are created
-with a section header and a colon followed by a block of indented text.
+Provides the ``Application`` class. That is all this module is expected to do.
 
-Example:
-  Examples can be given using either the ``Example`` or ``Examples``
-  sections. Sections support any reStructuredText formatting, including
-  literal blocks::
+:copyright: (c) 2014 by Sean Anthony Finucane.
+:license: MIT, see LICENSE for more details.
 
-      $ python example_google.py
-
-Section breaks are created by simply resuming unindented text. Section breaks
-are also implicitly created anytime a new section starts.
-
-Attributes:
-  module_level_variable (int): Module level variables may be documented in
-    either the ``Attributes`` section of the module docstring, or in an
-    inline docstring immediately following the variable.
-
-    Either form is acceptable, but the two should not be mixed. Choose
-    one convention to document module level variables and be consistent
-    with it.
-
-.. _Google Python Style Guide:
-   http://google-styleguide.googlecode.com/svn/trunk/pyguide.html
-
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 """
 # Python 2.6 and newer support
 from __future__ import (absolute_import, division, print_function, unicode_literals)
-from finucane.apputils.compatibility import make_compatible
-make_compatible(globals())
+from finucane.apputils.compatibility import make_yesterpy_compatible
+make_yesterpy_compatible(globals())
 
 import sys
 import logging
 import logging.handlers
 import traceback
 import inspect
-
-import argparse  # included in Python >2.7, but not 2.6
 
 if __python_version__['major'] > 2:
     from io import StringIO
@@ -58,96 +42,7 @@ else:
 
 from .namespace import Namespace, ImmutableNamespace
 from .errors import ApputilsParseError
-from .application_config import ApplicationConfig
-
-
-def NetloggerAddressParse(url, *args, **kwargs):
-    """Fetches rows from a Bigtable.
-
-    Retrieves rows pertaining to the given keys from the Table instance
-    represented by big_table.  Silly things may happen if
-    other_silly_variable is not None.
-
-    Args:
-        big_table: An open Bigtable Table instance.
-        keys: A sequence of strings representing the key of each table row
-            to fetch.
-        other_silly_variable: Another optional variable, that has a much
-            longer name than the other args, and which does nothing.
-
-    Returns:
-        A dict mapping keys to the corresponding table row data
-        fetched. Each row is represented as a tuple of strings. For
-        example:
-
-        {'Serak': ('Rigel VII', 'Preparer'),
-         'Zim': ('Irk', 'Invader'),
-         'Lrrr': ('Omicron Persei 8', 'Emperor')}
-
-        If a key from the keys argument is missing from the dictionary,
-        then that row was not found in the table.
-
-    Raises:
-        IOError: An error occurred accessing the bigtable.Table object.
-    """
-    s_url = str(url)
-    first_pass = urlparse(s_url)
-    # first pass:
-    if first_pass.hostname and first_pass.port:
-        return first_pass
-    # second pass:
-    if not s_url.startswith('//'):
-        s_url = "".join(["//", s_url])
-    second_pass = urlparse(s_url, *args, **kwargs)
-    # sanity check:
-    if second_pass.hostname and second_pass.port:
-        return second_pass
-    # exhausted!
-    raise ApputilsParseError('Cannot determine hostname/port for given netlogger string: "{url}"'.format(url=url))
-
-
-class BasicArgumentParser(argparse.ArgumentParser):
-    """Summary of class here.
-
-    Longer class information....
-    Longer class information....
-
-    Attributes:
-        likes_spam: A boolean indicating if we like SPAM or not.
-        eggs: An integer count of the eggs we have laid.
-    """
-    def __init__(self, default_config_file=None, **kwargs):
-        """ """
-        argparse.ArgumentParser.__init__(self, **kwargs)
-        self.add_argument('-v', '--verbose', dest='verbosity', action='count', default=0,
-                          help='output additional information to stderr (more v\'s mean more output, 4 is maximal)')
-        # Only enable the config option is the default config is not set to None.
-        if default_config_file is not None:
-            self.add_argument('--config', dest='config', action='store',
-                              default=default_config_file, type=ApplicationConfig,
-                              help='path to the configuration file.')
-        self.add_argument('--netlogger', dest='netlogger_url', action='store',
-                          default=None, type=NetloggerAddressParse, nargs='*',
-                          help='URL(s) of the socket server(s) to which log events will be sent (e.g., "localhost:9020")')
-
-
-class LogAboveErrorFilter(logging.Filter):
-    """
-    """
-    def __init__(self):
-        logging.Filter.__init__(self)
-
-    def filter(self, record):
-        # CRITICAL = 50
-        # ERROR = 40
-        # WARNING = 30
-        # INFO = 20
-        # DEBUG = 10
-        # NOTSET = 0
-        if record.levelno < logging.ERROR:
-            return 1
-        else:
-            return 0
+from .config import ApplicationConfig
 
 
 def _make_safe_name(name):

@@ -1,7 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Python 2.6 and newer support compatibility layer.
+"""finucane.apputils.compatibility
 
-Intended use: ``from compatibility import *``
+Provides facilities for making code cross-platform, cross-python, etc.
+Code compatibility is the focus here. As always, things should "just work."
+
+Notably, this module provides utilities for making code/modules capable of
+being run in older versions of Python (herein: ``yesterpy``).
+
+:copyright: (c) 2014 by Sean Anthony Finucane.
+:license: MIT, see LICENSE for more details.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 """
 from future.builtins import (bytes, dict, int, list, object, range, str,
                              ascii, chr, hex, input, next, oct, open,
@@ -24,11 +39,35 @@ __enhanced__ = ['bytes', 'dict', 'int', 'list', 'object', 'range', 'str',
                  'pow', 'round', 'super', 'filter', 'map', 'zip']
 
 
-def make_compatible(namespace):
-    namespace['future'] = __import__('future', globals=namespace, fromlist=[], level=0)
-    enhanced_ = __import__('future.builtins', globals=namespace, fromlist=__enhanced__, level=0)
-    for e in __enhanced__:
-        namespace[e] = getattr(enhanced_, e)
+def make_yesterpy_compatible(namespace):
+    """Makes a namespace backward compatible with earlier versions of Python.
+
+    .. warning: The specified namespace will be modified!
+    .. note: The specified namespace must be modifiable for this to be
+    effective.
+
+    After this function is called on a namespace, Python 3.x flavored code will
+    generally be able to be executed by a Python 2.6 or greater interpreter.
+
+    Example::
+
+        from finucane.apputils.compatibility import make_yesterpy_compatible
+        make_yesterpy_compatible(globals())
+
+    Args:
+        namespace: A namespace instance (dict, usually the return value of
+        ``globals()``)
+
+    Returns:
+        None
+    """
+    namespace['future'] = __import__('future', globals=namespace,
+                                     fromlist=[], level=0)
+    enhanced_ = __import__('future.builtins', globals=namespace,
+                           fromlist=__enhanced__, level=0)
+
+    for import_name in __enhanced__:
+        namespace[import_name] = getattr(enhanced_, import_name)
 
     if 'unicode' not in namespace:
         namespace['unicode'] = namespace['str']
