@@ -23,6 +23,15 @@ from finucane.apputils.compatibility import upgrade_namespace
 upgrade_namespace(globals())
 
 import logging
+import json
+
+
+class JsonFormatter(logging.Formatter):
+    """
+    """
+    def format(self, record):
+        """ """
+        return json.dumps(vars(record), indent=1)
 
 
 class LogAboveErrorFilter(logging.Filter):

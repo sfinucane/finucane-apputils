@@ -47,6 +47,7 @@ from .errors import ApputilsParseError
 from .args import ArgumentParser
 from .args import NetloggerAddressParse
 from .log import LogAboveErrorFilter
+from .log import JsonFormatter
 from .config import ApplicationConfig
 
 
@@ -61,9 +62,6 @@ class ApplicationBase(object):
         app_id: A boolean indicating if we like SPAM or not.
         eggs: An integer count of the eggs we have laid.
     """
-    STDLOG_FSPEC = '[pid: %(process)d | log: %(name)s | level: %(levelname)s | time: %(asctime)s]\n\t>>> %(message)s'
-    STDERR_FSPEC = STDLOG_FSPEC
-
     def __init__(self, name='', version='0.1.0', description='', epilogue='',
                  stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr,
                  stdlog=sys.stderr,
@@ -75,6 +73,9 @@ class ApplicationBase(object):
         self._stdlog_handler = None
         self._stderr_handler = None
         self._netlog_handler = None
+
+        self._stdlog_formatter = JsonFormatter()
+        self._stderr_formatter = JsonFormatter()
 
         self._version = version
         self._full_name = '{n}, version {v}'.format(n=name, v=version)
@@ -260,16 +261,14 @@ class Application(ApplicationBase):
             if self.stdlog is not None:
                 # events with a level above that of ERROR
                 self._stdlog_handler = logging.StreamHandler(self.stdlog)
-                stdlog_formatter = logging.Formatter(self.STDLOG_FSPEC)
-                self._stdlog_handler.setFormatter(stdlog_formatter)
+                self._stdlog_handler.setFormatter(self._stdlog_formatter)
                 self._stdlog_handler.addFilter(LogAboveErrorFilter())
                 self.log.addHandler(self._stdlog_handler)
 
             if self.stderr is not None:
                 # events with a level of ERROR and below
                 self._stderr_handler = logging.StreamHandler(self.stderr)
-                stderr_formatter = logging.Formatter(self.STDERR_FSPEC)
-                self._stderr_handler.setFormatter(stderr_formatter)
+                self._stderr_handler.setFormatter(self._stderr_formatter)
                 self._stderr_handler.setLevel(logging.ERROR)
                 self.log.addHandler(self._stderr_handler)
 
