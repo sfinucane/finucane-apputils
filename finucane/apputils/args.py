@@ -65,8 +65,10 @@ def NetloggerAddressParse(url, *args, **kwargs):
         'Cannot determine hostname/port for given netlogger string: "{url}"'.format(url=url))
 
 
+# TODO(s.finucane001@gmail.com): replace/improve the ``safe name`` function paradigm!!!
+
 def _make_safe_name(name):
-    return "_".join(name.split())
+    return "_".join(name.split()).replace('-', '_')
 
 
 def _make_option_name(name):
