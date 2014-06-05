@@ -37,11 +37,6 @@ else:
         def __exit__(self, exc_type, exc_val, exc_tb):
             self.close()
 
-if __python_version__['major'] > 2:
-    from urllib.parse import urlparse
-else:
-    from urlparse import urlparse
-
 from .namespace import Namespace, ImmutableNamespace
 from .errors import ApputilsParseError
 from .args import ArgumentParser

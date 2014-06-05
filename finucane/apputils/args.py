@@ -24,6 +24,11 @@ upgrade_namespace(globals())
 
 import argparse  # included in Python >2.7, but not 2.6
 
+if __python_version__['major'] > 2:
+    from urllib.parse import urlparse
+else:
+    from urlparse import urlparse
+
 from .errors import ApputilsParseError
 
 
