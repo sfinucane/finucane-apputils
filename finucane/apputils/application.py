@@ -150,7 +150,7 @@ class ApplicationBase(object):
         else:
             return print(*args, file=self.stdout, **kwargs)
 
-    def _initialize(self):
+    def setUp(self):
         pass
 
     def _main(self, *args, **kwargs):
@@ -162,7 +162,7 @@ class ApplicationBase(object):
     def _on_failure(self):
         pass
 
-    def _finalize(self):
+    def tearDown(self):
         pass
 
     def __call__(self, *args, **kwargs):
@@ -334,7 +334,7 @@ class Application(ApplicationBase):
                 self.log.debug('log_name = "{0!s}"'.format(self.log.name))
 
                 self.log.debug('Executing initialization hook.')
-                self._initialize()
+                self.setUp()
                 self.log.debug('Executing primary function.')
 
                 #####
@@ -355,7 +355,7 @@ class Application(ApplicationBase):
                 self._on_success()
             finally:
                 self.log.debug('Executing finalization hook.')
-                self._finalize()
+                self.tearDown()
                 self.log.debug('Exiting {app_id}'.format(app_id=self.app_debug_id))
 
         except ApputilsParseError as e:
