@@ -69,7 +69,7 @@ class MyApp(Application):
             'show intro', unix_flag='s',
             help_='if set, the welcome message is shown')
 
-    def setUp(self):
+    def _initialization(self):
         if self.state.exec_time is not None:
             self.print('Previous execution timestamp:', self.state.exec_time)
         self.state.exec_time = time.time()
@@ -91,7 +91,7 @@ class MyApp(Application):
     def _on_failure(self):
         pass
 
-    def tearDown(self):
+    def _finalization(self):
         self.print('Goodbye {usr}!'.format(usr=self.args.username[-1]))
 
 
